@@ -9,8 +9,9 @@ import { PhotoCaptureStep } from "./PhotoCaptureStep";
 import { SpeciesSelectStep, ManualSpeciesSearch } from "./SpeciesSelectStep";
 import { LightSetupStep } from "./LightSetupStep";
 import { NameConfirmStep } from "./NameConfirmStep";
-import type { PlantFlowState, SpeciesMatch, LightOption } from "./types";
-import type { PlantIdentificationResult } from "@/lib/ai";
+import type { PlantFlowState, SpeciesMatch, LightOption, LightAnalysisData } from "./types";
+import type { PlantIdentificationResult, LightAnalysisResult } from "@/lib/ai";
+import { compressImage as compressLightImage } from "@/lib/utils";
 
 const initialState: PlantFlowState = {
   step: 1,
@@ -20,6 +21,9 @@ const initialState: PlantFlowState = {
   photoUrl: null,
   selectedSpecies: null,
   lightSetup: null,
+  lightPhotoBase64: null,
+  lightPhotoBlob: null,
+  lightAnalysis: null,
   nickname: "",
   isLoading: false,
   error: null,
@@ -31,6 +35,7 @@ export function AddPlantFlow() {
   const [identificationResult, setIdentificationResult] =
     useState<PlantIdentificationResult | null>(null);
   const [showManualSearch, setShowManualSearch] = useState(false);
+  const [isAnalyzingLight, setIsAnalyzingLight] = useState(false);
 
   // Cleanup preview URL on unmount
   useEffect(() => {
@@ -42,10 +47,12 @@ export function AddPlantFlow() {
   }, [state.photoPreviewUrl]);
 
   const handlePhotoSelect = useCallback(async (file: File) => {
+    console.log("Photo selected:", { name: file.name, type: file.type, size: file.size });
     setState((prev) => ({ ...prev, isLoading: true, error: null }));
 
     try {
       const compressed = await compressImage(file);
+      console.log("Compression successful:", { width: compressed.width, height: compressed.height, blobSize: compressed.blob.size });
       const previewUrl = URL.createObjectURL(compressed.blob);
 
       setState((prev) => ({
@@ -57,10 +64,11 @@ export function AddPlantFlow() {
       }));
     } catch (error) {
       console.error("Error compressing image:", error);
+      const errorMessage = error instanceof Error ? error.message : "Unknown error";
       setState((prev) => ({
         ...prev,
         isLoading: false,
-        error: "Failed to process image. Please try again.",
+        error: `Failed to process image: ${errorMessage}`,
       }));
     }
   }, []);
@@ -126,6 +134,62 @@ export function AddPlantFlow() {
     setState((prev) => ({
       ...prev,
       lightSetup: light,
+    }));
+  }, []);
+
+  const handleAnalyzeLight = useCallback(async (file: File) => {
+    setIsAnalyzingLight(true);
+    setState((prev) => ({ ...prev, error: null }));
+
+    try {
+      // Compress the light photo
+      const compressed = await compressLightImage(file);
+
+      // Send to light analysis API
+      const response = await fetch("/api/analyze/light", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ imageBase64: compressed.base64 }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to analyze light");
+      }
+
+      const result: LightAnalysisResult = await response.json();
+
+      setState((prev) => ({
+        ...prev,
+        lightPhotoBase64: compressed.base64,
+        lightPhotoBlob: compressed.blob,
+        lightAnalysis: result as LightAnalysisData,
+      }));
+    } catch (error) {
+      console.error("Error analyzing light:", error);
+      const errorMessage = error instanceof Error ? error.message : "Unknown error";
+      setState((prev) => ({
+        ...prev,
+        error: `Failed to analyze light: ${errorMessage}`,
+      }));
+    } finally {
+      setIsAnalyzingLight(false);
+    }
+  }, []);
+
+  const handleClearLightAnalysis = useCallback(() => {
+    setState((prev) => ({
+      ...prev,
+      lightPhotoBase64: null,
+      lightPhotoBlob: null,
+      lightAnalysis: null,
+      lightSetup: null,
+    }));
+  }, []);
+
+  const handleLightContinue = useCallback(() => {
+    setState((prev) => ({
+      ...prev,
       step: 4,
     }));
   }, []);
@@ -141,6 +205,12 @@ export function AddPlantFlow() {
       // Upload photo to Supabase Storage
       const photoUrl = await uploadPlantPhoto(state.photoBlob, MOCK_USER_ID);
 
+      // Upload light photo if available
+      let lightPhotoUrl: string | null = null;
+      if (state.lightPhotoBlob) {
+        lightPhotoUrl = await uploadPlantPhoto(state.lightPhotoBlob, MOCK_USER_ID);
+      }
+
       // Create plant via API
       const response = await fetch("/api/plants", {
         method: "POST",
@@ -150,25 +220,29 @@ export function AddPlantFlow() {
           nickname: state.nickname.trim(),
           lightSetup: state.lightSetup,
           photoUrl,
+          lightPhotoUrl,
+          lightAnalysis: state.lightAnalysis,
           initialHealthScore: 75,
         }),
       });
 
       if (!response.ok) {
-        throw new Error("Failed to create plant");
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to create plant");
       }
 
       // Navigate to home with success
       router.push("/?added=true");
     } catch (error) {
       console.error("Error creating plant:", error);
+      const errorMessage = error instanceof Error ? error.message : "Unknown error";
       setState((prev) => ({
         ...prev,
         isLoading: false,
-        error: "Failed to add plant. Please try again.",
+        error: errorMessage,
       }));
     }
-  }, [state.photoBlob, state.selectedSpecies, state.lightSetup, state.nickname, router]);
+  }, [state.photoBlob, state.selectedSpecies, state.lightSetup, state.nickname, state.lightPhotoBlob, state.lightAnalysis, router]);
 
   const goBack = useCallback(() => {
     setState((prev) => ({
@@ -230,7 +304,12 @@ export function AddPlantFlow() {
         {state.step === 3 && (
           <LightSetupStep
             selectedLight={state.lightSetup}
+            lightAnalysis={state.lightAnalysis}
+            isAnalyzing={isAnalyzingLight}
             onSelectLight={handleSelectLight}
+            onAnalyzeLight={handleAnalyzeLight}
+            onClearAnalysis={handleClearLightAnalysis}
+            onContinue={handleLightContinue}
             onBack={goBack}
           />
         )}

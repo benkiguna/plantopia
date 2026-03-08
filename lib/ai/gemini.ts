@@ -1,7 +1,12 @@
 import { GoogleGenAI } from "@google/genai";
-import type { HealthEntry, HealthIssue } from "@/types/database";
+import type { HealthEntry, HealthIssue, LightSetup } from "@/types/database";
 
-const genAI = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY! });
+// Check for API key
+if (!process.env.GEMINI_API_KEY) {
+  console.warn("GEMINI_API_KEY is not set");
+}
+
+const genAI = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || "" });
 
 export interface PlantIdentificationResult {
   matches: Array<{
@@ -59,8 +64,12 @@ Rules:
 Respond with ONLY the JSON, no markdown formatting or extra text.`;
 
   try {
+    console.log("Calling Gemini API for plant identification...");
+    console.log("Image base64 length:", imageBase64.length);
+
+    // Use the models/gemini-1.5-flash format as per Google AI documentation
     const response = await genAI.models.generateContent({
-      model: "gemini-2.0-flash",
+      model: "gemini-2.5-flash",
       contents: [
         {
           role: "user",
@@ -77,7 +86,22 @@ Respond with ONLY the JSON, no markdown formatting or extra text.`;
       ],
     });
 
-    const text = response.text?.trim() || "";
+    console.log("Gemini response received");
+
+    // The response object has a text property that is a getter
+    let text: string;
+    if (typeof response.text === "string") {
+      text = response.text;
+    } else if (typeof response.text === "function") {
+      text = (response.text as () => string)();
+    } else if (response.candidates && response.candidates[0]?.content?.parts?.[0]?.text) {
+      text = response.candidates[0].content.parts[0].text;
+    } else {
+      console.error("Unexpected response structure:", JSON.stringify(response, null, 2));
+      throw new Error("Unexpected response structure from Gemini API");
+    }
+
+    console.log("Raw response text:", text.substring(0, 200));
 
     // Clean up potential markdown formatting
     const cleanJson = text.replace(/```json\n?|\n?```/g, "").trim();
@@ -86,6 +110,9 @@ Respond with ONLY the JSON, no markdown formatting or extra text.`;
     return result;
   } catch (error) {
     console.error("Error identifying plant:", error);
+    if (error instanceof Error) {
+      throw new Error(`Failed to identify plant: ${error.message}`);
+    }
     throw new Error("Failed to identify plant");
   }
 }
@@ -143,7 +170,7 @@ Respond with ONLY the JSON, no markdown formatting or extra text.`;
 
   try {
     const response = await genAI.models.generateContent({
-      model: "gemini-2.0-flash",
+      model: "gemini-2.5-flash",
       contents: [
         {
           role: "user",
@@ -160,7 +187,16 @@ Respond with ONLY the JSON, no markdown formatting or extra text.`;
       ],
     });
 
-    const text = response.text?.trim() || "";
+    let text: string;
+    if (typeof response.text === "string") {
+      text = response.text;
+    } else if (typeof response.text === "function") {
+      text = (response.text as () => string)();
+    } else if (response.candidates && response.candidates[0]?.content?.parts?.[0]?.text) {
+      text = response.candidates[0].content.parts[0].text;
+    } else {
+      throw new Error("Unexpected response structure from Gemini API");
+    }
 
     // Clean up potential markdown formatting
     const cleanJson = text.replace(/```json\n?|\n?```/g, "").trim();
@@ -173,6 +209,9 @@ Respond with ONLY the JSON, no markdown formatting or extra text.`;
     return result;
   } catch (error) {
     console.error("Error analyzing plant health:", error);
+    if (error instanceof Error) {
+      throw new Error(`Failed to analyze plant health: ${error.message}`);
+    }
     throw new Error("Failed to analyze plant health");
   }
 }
@@ -186,4 +225,94 @@ export function healthEntriesToHistory(
     date: new Date(entry.created_at).toLocaleDateString(),
     notes: entry.ai_notes,
   }));
+}
+
+export interface LightAnalysisResult {
+  light_level: LightSetup;
+  light_source: string;
+  estimated_daily_hours: number;
+  notes: string;
+  confidence: number;
+}
+
+export async function analyzeLight(
+  imageBase64: string
+): Promise<LightAnalysisResult> {
+  const prompt = `You are an expert at analyzing indoor lighting conditions for houseplants. Analyze this photo of where a plant will be placed and determine the light conditions.
+
+Return your response as valid JSON with this exact structure:
+{
+  "light_level": "bright_indirect",
+  "light_source": "South-facing window with sheer curtains",
+  "estimated_daily_hours": 6,
+  "notes": "Good indirect light throughout the day. The sheer curtains diffuse direct sunlight well.",
+  "confidence": 85
+}
+
+Rules:
+- light_level must be one of: "bright_direct", "bright_indirect", "medium", "low", "low_to_bright", "low_to_bright_indirect", "low_to_medium", "medium_to_bright_indirect", "medium_indirect"
+  - bright_direct: Direct sunlight for 4+ hours (south-facing unobstructed window)
+  - bright_indirect: Bright but filtered/diffused light (sheer curtains, near bright window but not in direct sun)
+  - medium: Moderate light (east/west window, or a few feet from bright window)
+  - low: Low light (north-facing window, far from windows, or artificial light only)
+  - Use combination values like "low_to_bright_indirect" if conditions vary throughout the day
+- light_source: Describe the primary light source (e.g., "East-facing window", "Skylight", "Fluorescent office lighting")
+- estimated_daily_hours: Estimated hours of usable plant light per day (0-14)
+- notes: Brief assessment of the lighting quality and any recommendations (1-2 sentences)
+- confidence: Your confidence in this assessment (0-100). Lower if image is unclear or lighting is ambiguous.
+
+Respond with ONLY the JSON, no markdown formatting or extra text.`;
+
+  try {
+    console.log("Calling Gemini API for light analysis...");
+
+    const response = await genAI.models.generateContent({
+      model: "gemini-2.5-flash",
+      contents: [
+        {
+          role: "user",
+          parts: [
+            { text: prompt },
+            {
+              inlineData: {
+                mimeType: "image/jpeg",
+                data: imageBase64,
+              },
+            },
+          ],
+        },
+      ],
+    });
+
+    let text: string;
+    if (typeof response.text === "string") {
+      text = response.text;
+    } else if (typeof response.text === "function") {
+      text = (response.text as () => string)();
+    } else if (response.candidates && response.candidates[0]?.content?.parts?.[0]?.text) {
+      text = response.candidates[0].content.parts[0].text;
+    } else {
+      console.error("Unexpected response structure:", JSON.stringify(response, null, 2));
+      throw new Error("Unexpected response structure from Gemini API");
+    }
+
+    console.log("Raw light analysis response:", text.substring(0, 200));
+
+    // Clean up potential markdown formatting
+    const cleanJson = text.replace(/```json\n?|\n?```/g, "").trim();
+
+    const result = JSON.parse(cleanJson) as LightAnalysisResult;
+
+    // Validate and clamp values
+    result.confidence = Math.max(0, Math.min(100, Math.round(result.confidence)));
+    result.estimated_daily_hours = Math.max(0, Math.min(14, result.estimated_daily_hours));
+
+    return result;
+  } catch (error) {
+    console.error("Error analyzing light:", error);
+    if (error instanceof Error) {
+      throw new Error(`Failed to analyze light: ${error.message}`);
+    }
+    throw new Error("Failed to analyze light");
+  }
 }

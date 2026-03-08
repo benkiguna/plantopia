@@ -86,7 +86,7 @@ export async function createPlant(plant: PlantInsert): Promise<Plant> {
 
   if (error) {
     console.error("Error creating plant:", error);
-    throw new Error("Failed to create plant");
+    throw new Error(`Failed to create plant: ${error.message}`);
   }
 
   return data as Plant;

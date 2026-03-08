@@ -9,7 +9,10 @@
       "Bash(gh auth status:*)",
       "Bash(gh auth login:*)",
       "Bash(git add:*)",
-      "Bash(git commit -m \"$\\(cat <<''EOF''\nInitial commit: Plantopia plant care PWA\n\n- Next.js 15 App Router setup with TypeScript strict mode\n- Supabase integration for auth, database, and image storage\n- Database schema with species, plants, health entries, and care logs\n- Claude API integration for plant identification and health analysis\n- PWA configuration with service worker for offline support\n- Mobile-first responsive design with Tailwind CSS\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")"
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nInitial commit: Plantopia plant care PWA\n\n- Next.js 15 App Router setup with TypeScript strict mode\n- Supabase integration for auth, database, and image storage\n- Database schema with species, plants, health entries, and care logs\n- Claude API integration for plant identification and health analysis\n- PWA configuration with service worker for offline support\n- Mobile-first responsive design with Tailwind CSS\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(git push:*)",
+      "Bash(npm uninstall:*)",
+      "Bash(node -e:*)"
     ]
   }
 }

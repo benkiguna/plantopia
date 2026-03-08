@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { identifyPlant, type PlantIdentificationResult } from "@/lib/ai";
+import { analyzeLight, type LightAnalysisResult } from "@/lib/ai";
 
 export async function POST(request: NextRequest) {
   try {
@@ -13,14 +13,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const result: PlantIdentificationResult = await identifyPlant(imageBase64);
+    const result: LightAnalysisResult = await analyzeLight(imageBase64);
 
     return NextResponse.json(result);
   } catch (error) {
-    console.error("Error in /api/analyze/identify:", error);
+    console.error("Error in /api/analyze/light:", error);
     const errorMessage = error instanceof Error ? error.message : "Unknown error";
     return NextResponse.json(
-      { error: `Failed to identify plant: ${errorMessage}` },
+      { error: `Failed to analyze light: ${errorMessage}` },
       { status: 500 }
     );
   }

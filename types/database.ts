@@ -27,6 +27,14 @@ export interface HealthIssue {
   recommendation: string;
 }
 
+export interface LightAnalysis {
+  light_level: LightSetup;
+  light_source: string;
+  estimated_daily_hours: number;
+  notes: string;
+  confidence: number;
+}
+
 export interface Database {
   public: {
     Tables: {
@@ -91,6 +99,8 @@ export interface Database {
           pot_size: string | null;
           soil_type: string | null;
           location: string | null;
+          light_photo_url: string | null;
+          light_analysis: Json | null;
           created_at: string;
           updated_at: string;
         };
@@ -103,6 +113,8 @@ export interface Database {
           pot_size?: string | null;
           soil_type?: string | null;
           location?: string | null;
+          light_photo_url?: string | null;
+          light_analysis?: Json | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -115,6 +127,8 @@ export interface Database {
           pot_size?: string | null;
           soil_type?: string | null;
           location?: string | null;
+          light_photo_url?: string | null;
+          light_analysis?: Json | null;
           created_at?: string;
           updated_at?: string;
         };

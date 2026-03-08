@@ -1,3 +1,11 @@
+export interface LightAnalysisData {
+  light_level: string;
+  light_source: string;
+  estimated_daily_hours: number;
+  notes: string;
+  confidence: number;
+}
+
 export interface PlantFlowState {
   step: 1 | 2 | 3 | 4;
   photoBase64: string | null;
@@ -6,6 +14,9 @@ export interface PlantFlowState {
   photoUrl: string | null;
   selectedSpecies: SpeciesMatch | null;
   lightSetup: LightOption | null;
+  lightPhotoBase64: string | null;
+  lightPhotoBlob: Blob | null;
+  lightAnalysis: LightAnalysisData | null;
   nickname: string;
   isLoading: boolean;
   error: string | null;
