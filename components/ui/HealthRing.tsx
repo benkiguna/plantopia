@@ -17,9 +17,15 @@ export function HealthRing({
   const offset = circumference - progress;
 
   const getColor = (score: number): string => {
-    if (score >= 70) return "var(--green-light)";
-    if (score >= 40) return "var(--amber)";
+    if (score >= 80) return "var(--neon-emerald)";
+    if (score >= 60) return "var(--amber)";
     return "var(--coral)";
+  };
+
+  const getGlowColor = (score: number): string => {
+    if (score >= 80) return "rgba(34, 211, 138, 0.6)";
+    if (score >= 60) return "rgba(229, 151, 15, 0.6)";
+    return "rgba(217, 79, 59, 0.6)";
   };
 
   return (
@@ -27,7 +33,7 @@ export function HealthRing({
       <svg
         width={size}
         height={size}
-        className="transform -rotate-90"
+        className="transform -rotate-90 overflow-visible"
         aria-label={`Health score: ${score}%`}
       >
         <circle
@@ -35,7 +41,7 @@ export function HealthRing({
           cy={size / 2}
           r={radius}
           fill="none"
-          stroke="rgba(255, 255, 255, 0.3)"
+          stroke="rgba(255, 255, 255, 0.1)"
           strokeWidth={strokeWidth}
         />
         <circle
@@ -49,9 +55,10 @@ export function HealthRing({
           strokeDasharray={circumference}
           strokeDashoffset={offset}
           className="transition-all duration-500 ease-out"
+          style={{ filter: `drop-shadow(0 0 6px ${getGlowColor(score)})` }}
         />
       </svg>
-      <span className="absolute text-xs font-semibold text-white">
+      <span className="absolute text-[13px] font-display font-bold text-white tracking-wide">
         {score}
       </span>
     </div>

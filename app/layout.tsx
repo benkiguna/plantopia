@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
-import { Fraunces, Outfit } from "next/font/google";
+import { Fraunces, Outfit, JetBrains_Mono } from "next/font/google";
 import { ServiceWorkerRegister } from "@/components/ServiceWorkerRegister";
+import { PushPromptView } from "@/components/notifications/PushPromptView";
 import "./globals.css";
 
 const fraunces = Fraunces({
@@ -11,6 +12,12 @@ const fraunces = Fraunces({
 
 const outfit = Outfit({
   variable: "--font-outfit",
+  subsets: ["latin"],
+  display: "swap",
+});
+
+const jetbrainsMono = JetBrains_Mono({
+  variable: "--font-mono",
   subsets: ["latin"],
   display: "swap",
 });
@@ -42,10 +49,11 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${fraunces.variable} ${outfit.variable} font-body antialiased bg-cream text-forest`}
+        className={`${fraunces.variable} ${outfit.variable} ${jetbrainsMono.variable} font-body antialiased bg-zinc-950 text-white selection:bg-neon-emerald/30`}
       >
         <ServiceWorkerRegister />
         {children}
+        <PushPromptView />
       </body>
     </html>
   );

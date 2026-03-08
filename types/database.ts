@@ -99,18 +99,21 @@ export interface Database {
           id: string;
           email: string | null;
           name: string | null;
+          push_subscription: Json | null;
           created_at: string;
         };
         Insert: {
           id?: string;
           email?: string | null;
           name?: string | null;
+          push_subscription?: Json | null;
           created_at?: string;
         };
         Update: {
           id?: string;
           email?: string | null;
           name?: string | null;
+          push_subscription?: Json | null;
           created_at?: string;
         };
         Relationships: [];

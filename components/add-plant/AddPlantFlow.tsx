@@ -243,7 +243,7 @@ export function AddPlantFlow() {
         error: errorMessage,
       }));
     }
-  }, [state.photoBlob, state.selectedSpecies, state.lightSetup, state.nickname, state.lightPhotoBlob, state.lightAnalysis, router]);
+  }, [state.photoBlob, state.selectedSpecies, state.lightSetup, state.nickname, state.lightPhotoBlob, state.lightAnalysis, state.photoBase64, router]);
 
   const goBack = useCallback(() => {
     setState((prev) => ({

@@ -21,13 +21,13 @@ export function MobileShell({
   transparentHeader = false,
 }: MobileShellProps) {
   return (
-    <div className="min-h-dvh flex flex-col max-w-md mx-auto bg-cream">
+    <div className="min-h-dvh flex flex-col max-w-md mx-auto bg-transparent">
       {(title || topBarContent || showBack) && (
         <TopBar title={title} showBack={showBack} transparent={transparentHeader}>
           {topBarContent}
         </TopBar>
       )}
-      <main className={`flex-1 ${showNav ? "pb-20" : ""}`}>{children}</main>
+      <main className={`flex-1 ${transparentHeader ? "-mt-14" : ""} ${showNav ? "pb-20" : ""}`}>{children}</main>
       {showNav && <BottomNav />}
     </div>
   );

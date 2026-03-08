@@ -18,15 +18,15 @@ export function TopBar({
       className={`sticky top-0 z-40 ${
         transparent
           ? "bg-transparent"
-          : "bg-cream/80 backdrop-blur-lg border-b border-forest/10"
+          : "bg-charcoal/80 backdrop-blur-lg border-b border-white/5"
       }`}
     >
       <div className="max-w-md mx-auto flex items-center justify-between h-14 px-4">
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 w-full">
           {showBack && (
             <button
               onClick={() => window.history.back()}
-              className="p-2 -ml-2 text-forest hover:bg-forest/10 rounded-full transition-colors"
+              className="p-2 -ml-2 text-white/50 hover:text-white hover:bg-white/10 rounded-full transition-colors"
               aria-label="Go back"
             >
               <svg
@@ -45,7 +45,7 @@ export function TopBar({
             </button>
           )}
           {title && (
-            <h1 className="text-xl font-display font-semibold text-forest">
+            <h1 className="text-xl font-display font-semibold text-white">
               {title}
             </h1>
           )}

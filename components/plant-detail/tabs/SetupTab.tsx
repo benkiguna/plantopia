@@ -61,7 +61,7 @@ export function SetupTab({ plant }: SetupTabProps) {
       <Card hover={false}>
         <CardContent>
           <div className="flex items-center justify-between mb-3">
-            <h3 className="font-display font-semibold text-forest">
+            <h3 className="font-display font-semibold text-white">
               Light Environment
             </h3>
             {lightAnalysis && (
@@ -84,27 +84,27 @@ export function SetupTab({ plant }: SetupTabProps) {
 
           {/* Light Analysis Results */}
           {lightAnalysis && (
-            <div className="p-3 bg-green/5 rounded-lg mb-3 space-y-2">
+            <div className="p-4 bg-white/5 border border-white/5 rounded-xl mb-4 space-y-3">
               <div className="flex items-center justify-between">
-                <span className="text-sm text-forest/70">Light Level</span>
-                <span className="text-sm font-medium text-forest capitalize">
+                <span className="text-[10px] uppercase font-mono tracking-widest text-white/50">Light Level</span>
+                <span className="text-sm font-semibold text-neon-emerald capitalize tracking-wide">
                   {lightAnalysis.light_level.replace(/_/g, " ")}
                 </span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-sm text-forest/70">Light Source</span>
-                <span className="text-sm font-medium text-forest">
+                <span className="text-[10px] uppercase font-mono tracking-widest text-white/50">Light Source</span>
+                <span className="text-sm font-medium text-white">
                   {lightAnalysis.light_source}
                 </span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-sm text-forest/70">Daily Hours</span>
-                <span className="text-sm font-medium text-forest">
+                <span className="text-[10px] uppercase font-mono tracking-widest text-white/50">Daily Hours</span>
+                <span className="text-sm font-medium text-white">
                   ~{lightAnalysis.estimated_daily_hours}h
                 </span>
               </div>
               {lightAnalysis.notes && (
-                <p className="text-xs text-forest/60 pt-2 border-t border-forest/10">
+                <p className="text-xs text-white/60 pt-3 mt-1 border-t border-white/10 leading-relaxed">
                   {lightAnalysis.notes}
                 </p>
               )}
@@ -112,9 +112,9 @@ export function SetupTab({ plant }: SetupTabProps) {
           )}
 
           {/* Current Setting */}
-          <div className="p-3 bg-forest/5 rounded-lg">
-            <p className="text-sm text-forest/70 mb-1">Current Light Setting</p>
-            <p className="text-sm font-medium text-forest capitalize">
+          <div className="p-4 bg-white/5 border border-white/5 rounded-xl">
+            <p className="text-[10px] font-mono tracking-widest uppercase text-white/40 mb-1">Current Light Setting</p>
+            <p className="text-sm font-semibold text-white capitalize">
               {plant.light_setup.replace(/_/g, " ")}
             </p>
           </div>
@@ -124,14 +124,14 @@ export function SetupTab({ plant }: SetupTabProps) {
       {/* Plant Details */}
       <Card hover={false}>
         <CardContent>
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="font-display font-semibold text-forest">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="font-display font-semibold text-white">
               Plant Details
             </h3>
             {!isEditing && (
               <button
                 onClick={() => setIsEditing(true)}
-                className="text-sm text-green font-medium"
+                className="text-[10px] font-mono uppercase tracking-widest text-neon-emerald font-semibold"
               >
                 Edit
               </button>
@@ -142,7 +142,7 @@ export function SetupTab({ plant }: SetupTabProps) {
             <div className="space-y-4">
               {/* Light Setup */}
               <div>
-                <label className="text-sm text-forest/70 mb-2 block">
+                <label className="text-[10px] uppercase font-mono tracking-widest text-white/50 mb-2 block">
                   Light Setup
                 </label>
                 <div className="grid grid-cols-2 gap-2">
@@ -150,16 +150,16 @@ export function SetupTab({ plant }: SetupTabProps) {
                     <button
                       key={option.value}
                       onClick={() => setLightSetup(option.value)}
-                      className={`p-2 rounded-lg text-left transition-all ${
+                      className={`p-3 rounded-xl text-left transition-all border ${
                         lightSetup === option.value
-                          ? "bg-green/20 border-2 border-green"
-                          : "bg-forest/5 border-2 border-transparent"
+                          ? "bg-neon-emerald/10 border-neon-emerald text-neon-emerald shadow-[inset_0_0_15px_rgba(34,211,138,0.15)]"
+                          : "bg-white/5 border-white/5 text-white hover:bg-white/10 hover:border-white/10"
                       }`}
                     >
-                      <p className="text-sm font-medium text-forest">
+                      <p className={`text-sm font-semibold ${lightSetup === option.value ? 'text-neon-emerald' : 'text-white'}`}>
                         {option.label}
                       </p>
-                      <p className="text-[10px] text-forest/60">{option.desc}</p>
+                      <p className={`text-[10px] mt-0.5 ${lightSetup === option.value ? 'text-neon-emerald/70' : 'text-white/40'}`}>{option.desc}</p>
                     </button>
                   ))}
                 </div>
@@ -167,7 +167,7 @@ export function SetupTab({ plant }: SetupTabProps) {
 
               {/* Location */}
               <div>
-                <label className="text-sm text-forest/70 mb-2 block">
+                <label className="text-[10px] uppercase font-mono tracking-widest text-white/50 mb-2 block">
                   Location
                 </label>
                 <input
@@ -175,13 +175,13 @@ export function SetupTab({ plant }: SetupTabProps) {
                   value={location}
                   onChange={(e) => setLocation(e.target.value)}
                   placeholder="e.g., Living room window"
-                  className="w-full p-3 bg-forest/5 rounded-lg text-sm text-forest placeholder:text-forest/40 focus:outline-none focus:ring-2 focus:ring-green/50"
+                  className="w-full p-3 bg-white/5 border border-white/10 rounded-xl text-sm text-white placeholder:text-white/30 focus:outline-none focus:ring-1 focus:ring-neon-emerald focus:border-neon-emerald transition-all"
                 />
               </div>
 
               {/* Pot Size */}
               <div>
-                <label className="text-sm text-forest/70 mb-2 block">
+                <label className="text-[10px] uppercase font-mono tracking-widest text-white/50 mb-2 block">
                   Pot Size
                 </label>
                 <input
@@ -189,13 +189,13 @@ export function SetupTab({ plant }: SetupTabProps) {
                   value={potSize}
                   onChange={(e) => setPotSize(e.target.value)}
                   placeholder="e.g., 6 inch"
-                  className="w-full p-3 bg-forest/5 rounded-lg text-sm text-forest placeholder:text-forest/40 focus:outline-none focus:ring-2 focus:ring-green/50"
+                  className="w-full p-3 bg-white/5 border border-white/10 rounded-xl text-sm text-white placeholder:text-white/30 focus:outline-none focus:ring-1 focus:ring-neon-emerald focus:border-neon-emerald transition-all"
                 />
               </div>
 
               {/* Soil Type */}
               <div>
-                <label className="text-sm text-forest/70 mb-2 block">
+                <label className="text-[10px] uppercase font-mono tracking-widest text-white/50 mb-2 block">
                   Soil Type
                 </label>
                 <input
@@ -203,7 +203,7 @@ export function SetupTab({ plant }: SetupTabProps) {
                   value={soilType}
                   onChange={(e) => setSoilType(e.target.value)}
                   placeholder="e.g., Well-draining potting mix"
-                  className="w-full p-3 bg-forest/5 rounded-lg text-sm text-forest placeholder:text-forest/40 focus:outline-none focus:ring-2 focus:ring-green/50"
+                  className="w-full p-3 bg-white/5 border border-white/10 rounded-xl text-sm text-white placeholder:text-white/30 focus:outline-none focus:ring-1 focus:ring-neon-emerald focus:border-neon-emerald transition-all"
                 />
               </div>
 
@@ -234,21 +234,21 @@ export function SetupTab({ plant }: SetupTabProps) {
             </div>
           ) : (
             <div className="space-y-3">
-              <div className="flex items-center justify-between p-3 bg-forest/5 rounded-lg">
-                <span className="text-sm text-forest/70">Location</span>
-                <span className="text-sm font-medium text-forest">
+              <div className="flex items-center justify-between p-4 bg-white/5 border border-white/5 rounded-xl">
+                <span className="text-[10px] uppercase font-mono tracking-widest text-white/50">Location</span>
+                <span className="text-sm font-medium text-white">
                   {plant.location || "Not set"}
                 </span>
               </div>
-              <div className="flex items-center justify-between p-3 bg-forest/5 rounded-lg">
-                <span className="text-sm text-forest/70">Pot Size</span>
-                <span className="text-sm font-medium text-forest">
+              <div className="flex items-center justify-between p-4 bg-white/5 border border-white/5 rounded-xl">
+                <span className="text-[10px] uppercase font-mono tracking-widest text-white/50">Pot Size</span>
+                <span className="text-sm font-medium text-white">
                   {plant.pot_size || "Not set"}
                 </span>
               </div>
-              <div className="flex items-center justify-between p-3 bg-forest/5 rounded-lg">
-                <span className="text-sm text-forest/70">Soil Type</span>
-                <span className="text-sm font-medium text-forest">
+              <div className="flex items-center justify-between p-4 bg-white/5 border border-white/5 rounded-xl">
+                <span className="text-[10px] uppercase font-mono tracking-widest text-white/50">Soil Type</span>
+                <span className="text-sm font-medium text-white">
                   {plant.soil_type || "Not set"}
                 </span>
               </div>
@@ -260,10 +260,10 @@ export function SetupTab({ plant }: SetupTabProps) {
       {/* Danger Zone */}
       <Card hover={false}>
         <CardContent>
-          <h3 className="font-display font-semibold text-red-600 mb-3">
+          <h3 className="font-display font-semibold text-coral mb-3">
             Danger Zone
           </h3>
-          <p className="text-sm text-forest/60 mb-3">
+          <p className="text-sm text-white/60 mb-3">
             Deleting this plant will remove all associated health entries and
             care logs. This action cannot be undone.
           </p>
@@ -281,7 +281,7 @@ export function SetupTab({ plant }: SetupTabProps) {
                   .catch(console.error);
               }
             }}
-            className="text-red-600 hover:bg-red-50"
+            className="text-coral hover:bg-coral/10"
           >
             Delete Plant
           </ActionButton>

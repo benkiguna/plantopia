@@ -8,6 +8,12 @@
   --coral: #D94F3B;
   --amber: #E5970F;
   --sky: #4AADE5;
+  
+  /* Biophilic Brutalism */
+  --emerald: #051F14;
+  --neon-emerald: #22D38A;
+  --charcoal: #111312;
+  --charcoal-light: #1A1C1B;
 }
 
 @theme inline {
@@ -18,14 +24,20 @@
   --color-coral: var(--coral);
   --color-amber: var(--amber);
   --color-sky: var(--sky);
+  
+  --color-emerald: var(--emerald);
+  --color-neon-emerald: var(--neon-emerald);
+  --color-charcoal: var(--charcoal);
+  --color-charcoal-light: var(--charcoal-light);
 
   --font-display: var(--font-fraunces);
   --font-body: var(--font-outfit);
+  --font-mono: var(--font-mono);
 }
 
 body {
-  background: var(--cream);
-  color: var(--forest);
+  background: var(--charcoal);
+  color: #FFFFFF;
   font-family: var(--font-body), system-ui, sans-serif;
   min-height: 100dvh;
 }

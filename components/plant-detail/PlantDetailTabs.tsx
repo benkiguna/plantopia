@@ -27,17 +27,16 @@ export function PlantDetailTabs({
   const [activeTab, setActiveTab] = useState<Tab>("Health");
 
   return (
-    <div className="px-4 py-4">
-      {/* Tab buttons */}
-      <div className="flex gap-2 border-b border-forest/10 pb-4 mb-4 overflow-x-auto">
+    <div className="mt-8 mb-12 px-6">
+      <div className="flex space-x-6 border-b border-white/10 mb-6 overflow-x-auto hide-scrollbar">
         {tabs.map((tab) => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
-            className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors whitespace-nowrap ${
+            className={`pb-3 text-[10px] font-mono uppercase tracking-widest whitespace-nowrap transition-colors ${
               activeTab === tab
-                ? "bg-green text-cream"
-                : "text-forest/60 hover:bg-forest/5"
+                ? "text-neon-emerald border-b-2 border-neon-emerald"
+                : "text-white/50 hover:text-white/80"
             }`}
           >
             {tab}
@@ -45,7 +44,6 @@ export function PlantDetailTabs({
         ))}
       </div>
 
-      {/* Tab content */}
       <div>
         {activeTab === "Health" && (
           <HealthTab plantId={plant.id} healthTimeline={healthTimeline} />
