@@ -1,5 +1,5 @@
 import { GoogleGenAI } from "@google/genai";
-import type { HealthEntry, HealthIssue, LightSetup } from "@/types/database";
+import type { HealthEntry, HealthIssue, LightSetup, DetailedHealthAnalysis } from "@/types/database";
 
 // Check for API key
 if (!process.env.GEMINI_API_KEY) {
@@ -30,6 +30,9 @@ export interface HealthAnalysisResult {
   issues: HealthIssue[];
   comparison_to_previous: string;
 }
+
+// Re-export the detailed analysis type
+export type { DetailedHealthAnalysis } from "@/types/database";
 
 export async function identifyPlant(
   imageBase64: string
@@ -120,8 +123,9 @@ Respond with ONLY the JSON, no markdown formatting or extra text.`;
 export async function analyzeHealth(
   imageBase64: string,
   species: string,
+  lightSetup: string,
   history: Array<{ score: number; date: string; notes: string | null }>
-): Promise<HealthAnalysisResult> {
+): Promise<DetailedHealthAnalysis> {
   const historyText =
     history.length > 0
       ? history
@@ -132,43 +136,66 @@ export async function analyzeHealth(
           .join("\n")
       : "No previous health assessments.";
 
-  const prompt = `You are a plant health analyst. Analyze this plant photo and provide a health assessment.
+  const prompt = `You are a plant health expert. Analyze this plant photo thoroughly.
 
 Species: ${species}
-
-Previous health assessments:
+Light setup: ${lightSetup.replace(/_/g, " ")}
+Previous history:
 ${historyText}
 
-Return your response as valid JSON with this exact structure:
+Score each dimension 0-100 and describe what you actually SEE in the photo.
+
+Return JSON only:
 {
-  "health_score": 75,
-  "trend": "stable",
-  "observations": [
-    "Leaves show good color and turgor",
-    "No visible pests or damage"
-  ],
-  "issues": [
+  "overall_score": 75,
+  "dimensions": {
+    "leaf_health": {
+      "score": 80,
+      "observation": "specific observation about leaf color, texture, spots, damage"
+    },
+    "growth_vitality": {
+      "score": 70,
+      "observation": "specific observation about new growth, stem strength, overall vigor"
+    },
+    "pest_disease": {
+      "score": 90,
+      "observation": "specific observation about pest presence, fungal issues, disease signs"
+    },
+    "hydration": {
+      "score": 65,
+      "observation": "specific observation about leaf turgor, soil moisture appearance, wilting"
+    },
+    "overall_appearance": {
+      "score": 70,
+      "observation": "specific observation about plant shape, symmetry, general aesthetics"
+    }
+  },
+  "positive_signs": ["array of 2-4 good things you observe"],
+  "concerns": [
     {
-      "name": "Minor leaf yellowing",
-      "severity": "low",
-      "recommendation": "Check watering frequency and drainage"
+      "issue": "what's wrong",
+      "severity": "low|medium|high",
+      "likely_cause": "why it's happening",
+      "recommendation": "what to do"
     }
   ],
-  "comparison_to_previous": "Plant health has remained stable since last check-in."
+  "summary": "2-3 sentence plain English summary of the plant's health"
 }
 
 Rules:
-- health_score is 0-100 (100 = perfect health)
-- trend must be one of: "improving", "stable", "declining"
-- observations should be 2-4 specific observations about the plant's current state
-- issues array can be empty if no problems detected
-- severity must be one of: "low", "medium", "high"
-- comparison_to_previous should reference the history if available
-- Be specific and actionable in recommendations
+- overall_score should be a weighted average of dimensions (0-100)
+- Each dimension score is 0-100 (100 = perfect)
+- observations must describe what you ACTUALLY SEE in the image
+- positive_signs: 2-4 specific good observations
+- concerns array can be empty if plant looks healthy
+- severity must be: "low", "medium", or "high"
+- summary should be conversational and helpful
 
 Respond with ONLY the JSON, no markdown formatting or extra text.`;
 
   try {
+    console.log("Calling Gemini API for detailed health analysis...");
+
     const response = await genAI.models.generateContent({
       model: "gemini-2.5-flash",
       contents: [
@@ -198,13 +225,19 @@ Respond with ONLY the JSON, no markdown formatting or extra text.`;
       throw new Error("Unexpected response structure from Gemini API");
     }
 
+    console.log("Raw health analysis response:", text.substring(0, 300));
+
     // Clean up potential markdown formatting
     const cleanJson = text.replace(/```json\n?|\n?```/g, "").trim();
 
-    const result = JSON.parse(cleanJson) as HealthAnalysisResult;
+    const result = JSON.parse(cleanJson) as DetailedHealthAnalysis;
 
-    // Validate and clamp health_score
-    result.health_score = Math.max(0, Math.min(100, Math.round(result.health_score)));
+    // Validate and clamp scores
+    result.overall_score = Math.max(0, Math.min(100, Math.round(result.overall_score)));
+
+    for (const key of Object.keys(result.dimensions) as Array<keyof typeof result.dimensions>) {
+      result.dimensions[key].score = Math.max(0, Math.min(100, Math.round(result.dimensions[key].score)));
+    }
 
     return result;
   } catch (error) {

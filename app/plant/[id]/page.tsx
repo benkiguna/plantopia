@@ -1,5 +1,11 @@
+import { notFound } from "next/navigation";
+import Image from "next/image";
+import Link from "next/link";
 import { MobileShell } from "@/components/MobileShell";
-import { ActionButton, HealthRing, Card, CardContent } from "@/components/ui";
+import { HealthRing } from "@/components/ui";
+import { getPlant, getHealthTimeline, getCareLog, getPlantCareSchedule } from "@/lib/data";
+import { PlantDetailTabs } from "@/components/plant-detail/PlantDetailTabs";
+import { QuickCareActions } from "@/components/plant-detail/QuickCareActions";
 
 interface PlantDetailPageProps {
   params: Promise<{ id: string }>;
@@ -8,104 +14,104 @@ interface PlantDetailPageProps {
 export default async function PlantDetailPage({ params }: PlantDetailPageProps) {
   const { id } = await params;
 
+  // Fetch all plant data in parallel
+  const [plant, healthTimeline, careLog] = await Promise.all([
+    getPlant(id),
+    getHealthTimeline(id),
+    getCareLog(id),
+  ]);
+
+  if (!plant) {
+    notFound();
+  }
+
+  // Get care schedule based on species
+  const careSchedule = await getPlantCareSchedule(id, plant.species);
+
+  const latestHealth = healthTimeline[0] ?? null;
+  const healthScore = latestHealth?.health_score ?? 75;
+  const photoUrl = latestHealth?.photo_url;
+  const speciesName = plant.species?.name ?? "Unknown Species";
+
   return (
     <MobileShell showBack showNav={false}>
       {/* Hero Image */}
       <div className="relative h-80 bg-green-light/20">
-        <div className="absolute inset-0 flex items-center justify-center">
+        {photoUrl ? (
+          <Image
+            src={photoUrl}
+            alt={plant.nickname}
+            fill
+            className="object-cover"
+            sizes="100vw"
+            priority
+          />
+        ) : (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="w-24 h-24 text-green/30"
+            >
+              <path d="M7 21a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2" />
+              <path d="M12 12a5 5 0 0 0-5 5" />
+              <path d="M12 12a5 5 0 0 1 5 5" />
+              <path d="M12 3v9" />
+            </svg>
+          </div>
+        )}
+
+        {/* Camera button for new photo */}
+        <Link
+          href={`/plant/${id}/check-in`}
+          className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm rounded-full p-3 shadow-lg hover:bg-white transition-colors"
+        >
           <svg
             xmlns="http://www.w3.org/2000/svg"
             viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"
-            strokeWidth="1"
+            strokeWidth="2"
             strokeLinecap="round"
             strokeLinejoin="round"
-            className="w-24 h-24 text-green/30"
+            className="w-5 h-5 text-forest"
           >
-            <path d="M12 2L2 7v15h20V7L12 2z" />
-            <path d="M12 22V12" />
-            <path d="M12 12L2 7" />
-            <path d="M12 12l10-5" />
+            <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z" />
+            <circle cx="12" cy="13" r="3" />
           </svg>
-        </div>
+        </Link>
+
+        {/* Health ring */}
         <div className="absolute bottom-4 right-4">
           <div className="bg-forest/60 backdrop-blur-sm rounded-full p-2">
-            <HealthRing score={85} size={56} strokeWidth={5} />
+            <HealthRing score={healthScore} size={56} strokeWidth={5} />
           </div>
         </div>
+
+        {/* Plant info with gradient overlay */}
         <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-6">
           <h1 className="text-2xl font-display font-bold text-white">
-            Plant Name
+            {plant.nickname}
           </h1>
-          <p className="text-white/80">Species Name</p>
+          <p className="text-white/80">{speciesName}</p>
         </div>
       </div>
 
-      {/* Quick Actions */}
-      <div className="px-4 py-4 border-b border-forest/10">
-        <div className="flex justify-around">
-          {[
-            { icon: "droplet", label: "Water" },
-            { icon: "flower", label: "Feed" },
-            { icon: "spray", label: "Mist" },
-            { icon: "rotate", label: "Rotate" },
-          ].map((action) => (
-            <button
-              key={action.label}
-              className="flex flex-col items-center gap-1 p-2 text-forest/70 hover:text-green transition-colors"
-            >
-              <div className="w-10 h-10 bg-green/10 rounded-full flex items-center justify-center">
-                <span className="text-green text-sm font-medium">
-                  {action.label[0]}
-                </span>
-              </div>
-              <span className="text-xs">{action.label}</span>
-            </button>
-          ))}
-        </div>
-      </div>
+      {/* Quick Care Actions */}
+      <QuickCareActions plantId={id} careSchedule={careSchedule} />
 
-      {/* Tabs Placeholder */}
-      <div className="px-4 py-4">
-        <div className="flex gap-2 border-b border-forest/10 pb-4 mb-4">
-          {["Health", "Care", "AI Insights", "Setup"].map((tab, i) => (
-            <button
-              key={tab}
-              className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
-                i === 0
-                  ? "bg-green text-cream"
-                  : "text-forest/60 hover:bg-forest/5"
-              }`}
-            >
-              {tab}
-            </button>
-          ))}
-        </div>
-
-        {/* Health Tab Content Placeholder */}
-        <div className="space-y-4">
-          <Card hover={false}>
-            <CardContent>
-              <h3 className="font-display font-semibold text-forest mb-2">
-                Health Timeline
-              </h3>
-              <p className="text-sm text-forest/60">
-                No health check-ins yet. Upload a photo to start tracking.
-              </p>
-              <div className="mt-4">
-                <ActionButton variant="primary" size="sm">
-                  Upload Photo for Analysis
-                </ActionButton>
-              </div>
-            </CardContent>
-          </Card>
-
-          <div className="text-center text-xs text-forest/40 py-4">
-            Plant ID: {id}
-          </div>
-        </div>
-      </div>
+      {/* Tabs */}
+      <PlantDetailTabs
+        plant={plant}
+        healthTimeline={healthTimeline}
+        careLog={careLog}
+        careSchedule={careSchedule}
+      />
     </MobileShell>
   );
 }

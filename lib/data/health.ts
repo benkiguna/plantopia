@@ -1,5 +1,13 @@
 import { createSimpleServerClient } from "@/lib/supabase/server";
-import type { HealthEntry, HealthEntryInsert } from "@/types/database";
+import type { HealthEntry, HealthEntryInsert, DetailedHealthAnalysis } from "@/types/database";
+
+export type HealthEntryUpdate = {
+  health_score?: number;
+  ai_notes?: string | null;
+  issues?: unknown;
+  analysis?: DetailedHealthAnalysis | null;
+  user_notes?: string | null;
+};
 
 export async function getHealthTimeline(
   plantId: string,
@@ -102,4 +110,25 @@ export function calculateHealthTrend(
 export function getHealthTrendDelta(entries: HealthEntry[]): number | null {
   if (entries.length < 2) return null;
   return entries[0].health_score - entries[1].health_score;
+}
+
+export async function updateHealthEntry(
+  entryId: string,
+  updates: HealthEntryUpdate
+): Promise<HealthEntry> {
+  const supabase = createSimpleServerClient();
+
+  const { data, error } = await supabase
+    .from("health_entries")
+    .update(updates as never)
+    .eq("id", entryId)
+    .select()
+    .single();
+
+  if (error) {
+    console.error("Error updating health entry:", error);
+    throw new Error(`Failed to update health entry: ${error.message}`);
+  }
+
+  return data as HealthEntry;
 }

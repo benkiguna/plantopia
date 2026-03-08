@@ -46,6 +46,7 @@ CREATE TABLE IF NOT EXISTS health_entries (
   health_score INTEGER NOT NULL CHECK (health_score >= 0 AND health_score <= 100),
   ai_notes TEXT,
   issues JSONB DEFAULT '[]',
+  analysis JSONB,
   user_notes TEXT,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );

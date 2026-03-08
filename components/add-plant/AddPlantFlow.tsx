@@ -211,18 +211,19 @@ export function AddPlantFlow() {
         lightPhotoUrl = await uploadPlantPhoto(state.lightPhotoBlob, MOCK_USER_ID);
       }
 
-      // Create plant via API
+      // Create plant via API with photoBase64 for health analysis
       const response = await fetch("/api/plants", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           speciesKey: state.selectedSpecies.speciesKey,
+          speciesName: state.selectedSpecies.speciesName,
           nickname: state.nickname.trim(),
           lightSetup: state.lightSetup,
           photoUrl,
+          photoBase64: state.photoBase64, // For initial health analysis
           lightPhotoUrl,
           lightAnalysis: state.lightAnalysis,
-          initialHealthScore: 75,
         }),
       });
 

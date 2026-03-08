@@ -2,7 +2,7 @@ import { ReactNode } from "react";
 
 interface BadgeProps {
   children: ReactNode;
-  variant?: "green" | "coral" | "amber" | "sky" | "forest";
+  variant?: "green" | "coral" | "amber" | "sky" | "forest" | "warning" | "red";
   pulse?: boolean;
   className?: string;
 }
@@ -19,6 +19,8 @@ export function Badge({
     amber: "bg-amber/20 text-amber",
     sky: "bg-sky/20 text-sky",
     forest: "bg-forest/20 text-forest",
+    warning: "bg-amber-100 text-amber-700",
+    red: "bg-red-100 text-red-700",
   };
 
   return (

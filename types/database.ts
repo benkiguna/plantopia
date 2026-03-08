@@ -27,6 +27,32 @@ export interface HealthIssue {
   recommendation: string;
 }
 
+export interface HealthConcern {
+  issue: string;
+  severity: "low" | "medium" | "high";
+  likely_cause: string;
+  recommendation: string;
+}
+
+export interface DimensionScore {
+  score: number;
+  observation: string;
+}
+
+export interface DetailedHealthAnalysis {
+  overall_score: number;
+  dimensions: {
+    leaf_health: DimensionScore;
+    growth_vitality: DimensionScore;
+    pest_disease: DimensionScore;
+    hydration: DimensionScore;
+    overall_appearance: DimensionScore;
+  };
+  positive_signs: string[];
+  concerns: HealthConcern[];
+  summary: string;
+}
+
 export interface LightAnalysis {
   light_level: LightSetup;
   light_source: string;
@@ -155,6 +181,7 @@ export interface Database {
           health_score: number;
           ai_notes: string | null;
           issues: Json;
+          analysis: Json | null;
           user_notes: string | null;
           created_at: string;
         };
@@ -165,6 +192,7 @@ export interface Database {
           health_score: number;
           ai_notes?: string | null;
           issues?: Json;
+          analysis?: Json | null;
           user_notes?: string | null;
           created_at?: string;
         };
@@ -175,6 +203,7 @@ export interface Database {
           health_score?: number;
           ai_notes?: string | null;
           issues?: Json;
+          analysis?: Json | null;
           user_notes?: string | null;
           created_at?: string;
         };
