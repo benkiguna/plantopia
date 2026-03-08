@@ -1,0 +1,50 @@
+@import "tailwindcss";
+
+:root {
+  --forest: #0D2818;
+  --green: #2D6A1E;
+  --green-light: #4A9D2F;
+  --cream: #FFFAF5;
+  --coral: #D94F3B;
+  --amber: #E5970F;
+  --sky: #4AADE5;
+}
+
+@theme inline {
+  --color-forest: var(--forest);
+  --color-green: var(--green);
+  --color-green-light: var(--green-light);
+  --color-cream: var(--cream);
+  --color-coral: var(--coral);
+  --color-amber: var(--amber);
+  --color-sky: var(--sky);
+
+  --font-display: var(--font-fraunces);
+  --font-body: var(--font-outfit);
+}
+
+body {
+  background: var(--cream);
+  color: var(--forest);
+  font-family: var(--font-body), system-ui, sans-serif;
+  min-height: 100dvh;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-display), Georgia, serif;
+}
+
+@keyframes slide-up {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.animate-slide-up {
+  animation: slide-up 0.3s ease-out forwards;
+}
