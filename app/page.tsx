@@ -5,7 +5,7 @@ import { SuccessToast } from "@/components/SuccessToast";
 
 export default function HomePage() {
   return (
-    <MobileShell title="My Garden">
+    <MobileShell>
       <GardenView />
       <Suspense fallback={null}>
         <SuccessToast />

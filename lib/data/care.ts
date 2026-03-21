@@ -67,9 +67,13 @@ export async function getLastCareAction(
 
 export function calculateNextCareDate(
   lastCareDate: Date | null,
-  intervalDays: number
+  intervalDays: number,
+  plantCreatedAt?: Date
 ): Date {
-  const baseDate = lastCareDate || new Date();
+  // Use last care date, or plant creation date, or today as the base.
+  // Using plant.created_at means a plant created 10 days ago with a 7-day
+  // interval correctly shows as Overdue rather than "In 7d".
+  const baseDate = lastCareDate ?? plantCreatedAt ?? new Date();
   const nextDate = new Date(baseDate);
   nextDate.setDate(nextDate.getDate() + intervalDays);
   return nextDate;
@@ -93,7 +97,8 @@ export interface CareSchedule {
 
 export async function getPlantCareSchedule(
   plantId: string,
-  species: Species | null
+  species: Species | null,
+  plantCreatedAt?: Date
 ): Promise<CareSchedule> {
   const waterDays = species?.water_days || 7;
   const fertilizeDays = species?.fertilize_days || 30;
@@ -106,8 +111,8 @@ export async function getPlantCareSchedule(
   const lastWaterDate = lastWater ? new Date(lastWater.created_at) : null;
   const lastFertilizeDate = lastFertilize ? new Date(lastFertilize.created_at) : null;
 
-  const nextWaterDate = calculateNextCareDate(lastWaterDate, waterDays);
-  const nextFertilizeDate = calculateNextCareDate(lastFertilizeDate, fertilizeDays);
+  const nextWaterDate = calculateNextCareDate(lastWaterDate, waterDays, plantCreatedAt);
+  const nextFertilizeDate = calculateNextCareDate(lastFertilizeDate, fertilizeDays, plantCreatedAt);
 
   return {
     water: {

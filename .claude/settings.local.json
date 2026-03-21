@@ -12,7 +12,41 @@
       "Bash(git commit -m \"$\\(cat <<''EOF''\nInitial commit: Plantopia plant care PWA\n\n- Next.js 15 App Router setup with TypeScript strict mode\n- Supabase integration for auth, database, and image storage\n- Database schema with species, plants, health entries, and care logs\n- Claude API integration for plant identification and health analysis\n- PWA configuration with service worker for offline support\n- Mobile-first responsive design with Tailwind CSS\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
       "Bash(git push:*)",
       "Bash(npm uninstall:*)",
-      "Bash(node -e:*)"
+      "Bash(node -e:*)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3000)",
+      "Bash(npx next --version)",
+      "mcp__figma__generate_figma_design",
+      "Bash(open \"http://localhost:3000/#figmacapture=32723a2e-d69e-473d-aec0-ef0733ffe6d0&figmaendpoint=https%3A%2F%2Fmcp.figma.com%2Fmcp%2Fcapture%2F32723a2e-d69e-473d-aec0-ef0733ffe6d0%2Fsubmit&figmadelay=3000\")",
+      "Bash(curl -s http://localhost:3000/)",
+      "Bash(lsof -ti:3000)",
+      "Bash(xargs kill -9)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3000/)",
+      "Bash(xargs kill -9 rm -rf /Users/prasadhegde/dev/plant-care/.next ls /Users/prasadhegde/dev/plant-care/.next)",
+      "Bash(npx next build --debug)",
+      "Bash(git stash)",
+      "Bash(npx next build)",
+      "Bash(npx next info)",
+      "Bash(ls /Users/prasadhegde/dev/plant-care/next.config.*)",
+      "Bash(NEXT_PRIVATE_STANDALONE=0 npx next build --verbose)",
+      "Bash(npm run dev)",
+      "Bash(npx next dev --no-turbopack)",
+      "Bash(NODE_ENV=development npx next dev -p 3000)",
+      "Bash(node -e \"console.log\\(require\\(''/Users/prasadhegde/dev/plant-care/node_modules/next/package.json''\\).version\\)\")",
+      "Bash(echo $NODE_ENV)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:54112)",
+      "Bash(curl -s http://localhost:54112)",
+      "Bash(kill %1)",
+      "Bash(wait)",
+      "Bash(/bin/sleep 10)",
+      "Read(//private/tmp/**)",
+      "mcp__ide__getDiagnostics",
+      "Bash(grep -l \"DropIcon\\\\|Drop\" node_modules/@phosphor-icons/react/dist/*.cjs)",
+      "Bash(grep:*)",
+      "Bash(node:*)"
     ]
-  }
+  },
+  "enableAllProjectMcpServers": true,
+  "enabledMcpjsonServers": [
+    "figma"
+  ]
 }

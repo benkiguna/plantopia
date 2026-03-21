@@ -1,19 +1,30 @@
 @import "tailwindcss";
 
 :root {
-  --forest: #0D2818;
-  --green: #2D6A1E;
-  --green-light: #4A9D2F;
-  --cream: #FFFAF5;
-  --coral: #D94F3B;
-  --amber: #E5970F;
-  --sky: #4AADE5;
-  
+  --forest: #0d2818;
+  --green: #2d6a1e;
+  --green-light: #4a9d2f;
+  --cream: #fffaf5;
+  --coral: #d94f3b;
+  --amber: #e5970f;
+  --sky: #4aade5;
+
   /* Biophilic Brutalism */
-  --emerald: #051F14;
-  --neon-emerald: #22D38A;
+  --emerald: #051f14;
+  --neon-emerald: #22d38a;
   --charcoal: #111312;
-  --charcoal-light: #1A1C1B;
+  --charcoal-light: #1a1c1b;
+
+  /* Glassmorphism Redesign */
+  --bg-dark: #121417;
+  --slate-gray: #1e2226;
+  --glass-emerald: #4ade80;
+  --warning-gold: #facc15;
+  --alert-red: #f87171;
+  --text-light: #f2f5f8;
+  --text-muted: #9ca3af;
+  --frost: rgba(255, 255, 255, 0.05);
+  --amber-glow: #ffd580;
 }
 
 @theme inline {
@@ -24,26 +35,60 @@
   --color-coral: var(--coral);
   --color-amber: var(--amber);
   --color-sky: var(--sky);
-  
+
   --color-emerald: var(--emerald);
   --color-neon-emerald: var(--neon-emerald);
   --color-charcoal: var(--charcoal);
   --color-charcoal-light: var(--charcoal-light);
 
+  /* Glassmorphism Redesign */
+  --color-bg-dark: var(--bg-dark);
+  --color-slate-gray: var(--slate-gray);
+  --color-glass-emerald: var(--glass-emerald);
+  --color-warning-gold: var(--warning-gold);
+  --color-alert-red: var(--alert-red);
+  --color-text-light: var(--text-light);
+  --color-text-muted: var(--text-muted);
+  --color-frost: var(--frost);
+  --color-amber-glow: var(--amber-glow);
+
   --font-display: var(--font-fraunces);
   --font-body: var(--font-outfit);
   --font-mono: var(--font-mono);
+  --font-serif: var(--font-playfair);
+  --font-sans: var(--font-inter);
 }
 
 body {
-  background: var(--charcoal);
-  color: #FFFFFF;
+  background: transparent !important;
+  color: var(--text-light);
   font-family: var(--font-body), system-ui, sans-serif;
   min-height: 100dvh;
 }
 
-h1, h2, h3, h4, h5, h6 {
-  font-family: var(--font-display), Georgia, serif;
+/* Updated Glass utility to match the high-end spec */
+.glass-card {
+  background: rgba(255, 255, 255, 0.02); /* Lowered for better refraction */
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(40px) saturate(180%); /* Increased blur */
+  -webkit-backdrop-filter: blur(40px) saturate(180%);
+  border-radius: 44px; /* Matches the 'Squircle' vibe better */
+  box-shadow: 0 32px 64px -16px rgba(0, 0, 0, 0.6);
+}
+
+/* Headers: Playfair Display serif per design.md */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-serif), Georgia, serif;
+}
+
+/* Ambient radial glow background */
+.ambient-glow {
+  display: none;
 }
 
 @keyframes slide-up {
@@ -59,4 +104,10 @@ h1, h2, h3, h4, h5, h6 {
 
 .animate-slide-up {
   animation: slide-up 0.3s ease-out forwards;
+}
+
+@keyframes scan {
+  0%   { top: 0%; }
+  50%  { top: calc(100% - 2px); }
+  100% { top: 0%; }
 }

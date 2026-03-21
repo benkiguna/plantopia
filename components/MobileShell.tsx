@@ -21,14 +21,16 @@ export function MobileShell({
   transparentHeader = false,
 }: MobileShellProps) {
   return (
-    <div className="min-h-dvh flex flex-col max-w-md mx-auto bg-transparent">
+    <div className="min-h-dvh flex flex-col max-w-md mx-auto bg-transparent relative">
+{/* ambient glow removed — body radial-gradient is the background */}
+
       {(title || topBarContent || showBack) && (
         <TopBar title={title} showBack={showBack} transparent={transparentHeader}>
           {topBarContent}
         </TopBar>
       )}
-      <main className={`flex-1 ${transparentHeader ? "-mt-14" : ""} ${showNav ? "pb-20" : ""}`}>{children}</main>
-      {showNav && <BottomNav />}
+      <main className={`flex-1 ${transparentHeader ? "-mt-14" : ""}`}>{children}</main>
+      {/* BottomNav hidden — {showNav && <BottomNav />} */}
     </div>
   );
 }

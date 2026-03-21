@@ -1,9 +1,8 @@
 "use client";
 
-import { useState } from "react";
-import { ActionButton, Card, Badge } from "@/components/ui";
+import React, { useState } from "react";
+import { SunIcon, DropIcon, MagnifyingGlassIcon } from "@phosphor-icons/react";
 import type { SpeciesMatch } from "./types";
-import type { Species } from "@/types/database";
 
 interface SpeciesSelectStepProps {
   matches: SpeciesMatch[];
@@ -19,8 +18,6 @@ interface SpeciesSelectStepProps {
 
 export function SpeciesSelectStep({
   matches,
-  needsClarification,
-  clarificationMessage,
   selectedSpecies,
   isLoading,
   onSelectSpecies,
@@ -28,120 +25,126 @@ export function SpeciesSelectStep({
   onContinue,
   onBack,
 }: SpeciesSelectStepProps) {
-  if (needsClarification) {
-    return (
-      <div className="space-y-6">
-        <Card hover={false}>
-          <div className="p-6 text-center">
-            <div className="w-16 h-16 mx-auto mb-4 bg-amber/20 rounded-full flex items-center justify-center">
-              <svg
-                className="w-8 h-8 text-amber"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
-            </div>
-            <h3 className="text-lg font-display font-semibold text-forest mb-2">
-              Not Sure About This One
-            </h3>
-            <p className="text-sm text-forest/60 mb-4">
-              {clarificationMessage ||
-                "Can you take a closer photo of a leaf? This will help with identification."}
-            </p>
-            <div className="flex gap-3">
-              <ActionButton variant="secondary" onClick={onBack} className="flex-1">
-                Retake Photo
-              </ActionButton>
-              <ActionButton variant="primary" onClick={onManualSearch} className="flex-1">
-                Search Manually
-              </ActionButton>
-            </div>
-          </div>
-        </Card>
-      </div>
-    );
-  }
-
   return (
-    <div className="space-y-4">
-      <div>
-        <h3 className="text-lg font-display font-semibold text-forest mb-1">
+    /* FIXED VIEWPORT LOCK */
+    <div className="flex flex-col w-full h-full animate-slide-up">
+      {/* HEADER */}
+      <div className="text-center space-y-0.5 shrink-0 px-6 pt-4">
+        <h2 className="text-2xl font-serif italic text-white/95 tracking-tight">
           Is this your plant?
-        </h3>
-        <p className="text-sm text-forest/60">
-          Select the best match or search manually
+        </h2>
+        <p className="text-[9px] text-white/30 tracking-[0.4em] uppercase font-body">
+          Bio-Identification Results
         </p>
       </div>
 
-      <div className="space-y-3">
-        {matches.map((match) => (
-          <button
-            key={match.speciesKey}
-            onClick={() => onSelectSpecies(match)}
-            className={`
-              w-full text-left p-4 rounded-xl border-2 transition-all
-              ${
-                selectedSpecies?.speciesKey === match.speciesKey
-                  ? "border-green bg-green/5"
-                  : "border-transparent bg-white hover:border-forest/20"
-              }
-            `}
-          >
-            <div className="flex items-start justify-between mb-2">
-              <div>
-                <h4 className="font-semibold text-forest">{match.speciesName}</h4>
-                <p className="text-xs text-forest/50">{match.speciesKey}</p>
+      {/* THE LIST AREA (The only part allowed to scroll) */}
+      <div className="w-full flex-1 overflow-y-auto no-scrollbar px-6 py-4 space-y-4">
+        {matches.map((match) => {
+          const isSelected = selectedSpecies?.speciesKey === match.speciesKey;
+
+          return (
+            <button
+              key={match.speciesKey}
+              onClick={() => onSelectSpecies(match)}
+              className="relative w-full p-6 rounded-[40px] text-left transition-all duration-500 border overflow-hidden"
+              style={{
+                backgroundColor: isSelected
+                  ? "rgba(74, 222, 128, 0.1)"
+                  : "rgba(255, 255, 255, 0.02)",
+                borderColor: isSelected
+                  ? "rgba(74, 222, 128, 0.4)"
+                  : "rgba(255, 255, 255, 0.05)",
+                backdropFilter: "blur(40px)",
+                WebkitBackdropFilter: "blur(40px)",
+              }}
+            >
+              {/* TOP INFO */}
+              <div className="flex justify-between items-start mb-4">
+                <div className="space-y-1">
+                  <h4 className="text-xl font-serif italic text-white/90 leading-none">
+                    {match.speciesName}
+                  </h4>
+                  <p className="text-[9px] text-white/20 tracking-widest font-bold uppercase italic">
+                    {match.speciesKey}
+                  </p>
+                </div>
+                <div
+                  className="w-fit px-4 py-2 rounded-full border flex flex-col items-center justify-center shrink-0"
+                  style={{
+                    backgroundColor: isSelected
+                      ? "rgba(74, 222, 128, 0.2)"
+                      : "rgba(255, 255, 255, 0.05)",
+                    borderColor: isSelected
+                      ? "rgba(74, 222, 128, 0.4)"
+                      : "rgba(255, 255, 255, 0.1)",
+                  }}
+                >
+                  <span className="text-[9px] font-bold text-white/80 leading-none mb-1">
+                    {match.confidence}%
+                  </span>
+                  <span className="text-[7px] font-bold uppercase tracking-[0.2em] text-white/30 leading-none">
+                    Match
+                  </span>
+                </div>
               </div>
-              <Badge
-                variant={match.confidence >= 80 ? "green" : match.confidence >= 60 ? "amber" : "coral"}
-              >
-                {match.confidence}% match
-              </Badge>
-            </div>
-            <div className="flex gap-4 text-xs text-forest/60">
-              <span className="flex items-center gap-1">
-                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707" />
-                </svg>
-                {match.careInfo.light}
-              </span>
-              <span className="flex items-center gap-1">
-                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
-                </svg>
-                {match.careInfo.water}
-              </span>
-            </div>
-          </button>
-        ))}
+
+              {/* DATA GRID - Eliminates internal scrollbars */}
+              <div className="grid grid-cols-2 gap-4 border-t border-white/5 pt-5">
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2 text-white/20">
+                    <SunIcon size={12} weight="fill" />
+                    <span className="text-[7px] uppercase tracking-widest font-bold">
+                      Exposure
+                    </span>
+                  </div>
+                  <p className="text-[10px] text-white/50 leading-relaxed font-medium line-clamp-3">
+                    {match.careInfo.light}
+                  </p>
+                </div>
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2 text-white/20">
+                    <DropIcon size={12} weight="fill" />
+                    <span className="text-[7px] uppercase tracking-widest font-bold">
+                      Hydration
+                    </span>
+                  </div>
+                  <p className="text-[10px] text-white/50 leading-relaxed font-medium line-clamp-3">
+                    {match.careInfo.water}
+                  </p>
+                </div>
+              </div>
+            </button>
+          );
+        })}
+
+        <button
+          onClick={onManualSearch}
+          className="w-full py-5 rounded-[40px] border border-dashed border-white/10 text-[9px] font-bold text-white/20 uppercase tracking-[0.3em]"
+        >
+          None of these — search manually
+        </button>
       </div>
 
-      <button
-        onClick={onManualSearch}
-        className="w-full p-4 rounded-xl border-2 border-dashed border-forest/20 text-forest/60 hover:border-forest/40 hover:text-forest transition-colors"
-      >
-        None of these — search manually
-      </button>
-
-      <div className="flex gap-3 pt-2">
-        <ActionButton variant="secondary" onClick={onBack} className="flex-1">
-          Back
-        </ActionButton>
-        <ActionButton
-          variant="primary"
-          onClick={onContinue}
-          disabled={!selectedSpecies || isLoading}
-          className="flex-1"
-        >
-          Continue
-        </ActionButton>
+      {/* ACTION BAR */}
+      <div className="shrink-0 px-6 pb-6 pt-3">
+        <div className="flex gap-3">
+          <button
+            onClick={onBack}
+            className="flex-1 py-3.5 bg-white/5 border border-white/10 rounded-2xl text-[10px] font-bold uppercase tracking-widest text-white/40"
+          >
+            Back
+          </button>
+          <button
+            onClick={onContinue}
+            disabled={!selectedSpecies || isLoading}
+            className={`flex-[2] py-3.5 rounded-2xl text-[10px] font-bold uppercase tracking-widest transition-all
+              ${selectedSpecies ? "bg-glass-emerald text-emerald-950 shadow-[0_8px_24px_rgba(74,222,128,0.25)]" : "bg-white/5 text-white/10 border border-white/5 cursor-not-allowed"}
+            `}
+          >
+            Continue
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -154,111 +157,131 @@ interface ManualSearchProps {
 
 export function ManualSpeciesSearch({ onSelect, onBack }: ManualSearchProps) {
   const [query, setQuery] = useState("");
-  const [results, setResults] = useState<Species[]>([]);
+  const [results, setResults] = useState<SpeciesMatch[]>([]);
   const [isSearching, setIsSearching] = useState(false);
+  const debounceRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const handleSearch = async (searchQuery: string) => {
-    setQuery(searchQuery);
+  const handleQueryChange = (value: string) => {
+    setQuery(value);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
 
-    if (searchQuery.length < 2) {
+    if (value.trim().length < 2) {
       setResults([]);
       return;
     }
 
-    setIsSearching(true);
-    try {
-      const response = await fetch(`/api/species?q=${encodeURIComponent(searchQuery)}`);
-      if (response.ok) {
-        const data = await response.json();
-        setResults(data);
+    debounceRef.current = setTimeout(async () => {
+      setIsSearching(true);
+      try {
+        const response = await fetch(
+          `/api/analyze/search?q=${encodeURIComponent(value.trim())}`,
+        );
+        if (response.ok) {
+          const data: SpeciesMatch[] = await response.json();
+          setResults(data);
+        }
+      } catch (error) {
+        console.error("Error searching species:", error);
+      } finally {
+        setIsSearching(false);
       }
-    } catch (error) {
-      console.error("Error searching species:", error);
-    } finally {
-      setIsSearching(false);
-    }
-  };
-
-  const handleSelectSpecies = (species: Species) => {
-    onSelect({
-      speciesKey: species.key,
-      speciesName: species.name,
-      confidence: 100,
-      careInfo: {
-        water: `Every ${species.water_days} days`,
-        light: species.light.replace(/_/g, " "),
-        humidity: species.humidity,
-      },
-    });
+    }, 400);
   };
 
   return (
-    <div className="space-y-4">
-      <div>
-        <h3 className="text-lg font-display font-semibold text-forest mb-1">
-          Search for your plant
-        </h3>
-        <p className="text-sm text-forest/60">
-          Type the plant name to find it
-        </p>
-      </div>
-
-      <div className="relative">
-        <input
-          type="text"
-          value={query}
-          onChange={(e) => handleSearch(e.target.value)}
-          placeholder="Search plants..."
-          className="w-full px-4 py-3 rounded-xl border-2 border-forest/10 focus:border-green focus:outline-none bg-white text-forest placeholder:text-forest/40"
-        />
-        {isSearching && (
-          <div className="absolute right-3 top-1/2 -translate-y-1/2">
-            <svg className="animate-spin w-5 h-5 text-forest/40" viewBox="0 0 24 24">
-              <circle
-                className="opacity-25"
-                cx="12"
-                cy="12"
-                r="10"
-                stroke="currentColor"
-                strokeWidth="4"
-                fill="none"
-              />
-              <path
-                className="opacity-75"
-                fill="currentColor"
-                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-              />
-            </svg>
-          </div>
-        )}
-      </div>
-
-      {results.length > 0 && (
-        <div className="space-y-2">
-          {results.map((species) => (
-            <button
-              key={species.key}
-              onClick={() => handleSelectSpecies(species)}
-              className="w-full text-left p-4 bg-white rounded-xl hover:bg-green/5 transition-colors"
-            >
-              <h4 className="font-semibold text-forest">{species.name}</h4>
-              <p className="text-xs text-forest/60">
-                Water every {species.water_days} days • {species.light.replace(/_/g, " ")}
-              </p>
-            </button>
-          ))}
+    <div className="flex flex-col w-full h-full animate-slide-up">
+      {/* --- CONTENT AREA --- */}
+      <div className="flex-1 flex flex-col overflow-hidden px-6 pt-4 min-h-0">
+        {/* Header */}
+        <div className="text-center space-y-0.5 shrink-0 mb-4">
+          <h3 className="text-xl font-serif italic text-white/95 tracking-tight">
+            Search by Name
+          </h3>
+          <p className="text-[9px] text-white/30 tracking-[0.4em] uppercase font-body italic">
+            AI Plant Encyclopedia
+          </p>
         </div>
-      )}
 
-      {query.length >= 2 && results.length === 0 && !isSearching && (
-        <p className="text-center text-forest/60 py-4">
-          No plants found matching &quot;{query}&quot;
-        </p>
-      )}
+        {/* Search bar */}
+        <div className="relative shrink-0 mb-4">
+          <div className="absolute left-5 top-1/2 -translate-y-1/2 text-white/20">
+            <MagnifyingGlassIcon size={18} weight="light" />
+          </div>
+          <input
+            type="text"
+            value={query}
+            onChange={(e) => handleQueryChange(e.target.value)}
+            placeholder="e.g. monstera, snake plant…"
+            autoFocus
+            className="w-full pl-12 pr-12 py-3.5 rounded-2xl border border-white/10 text-white font-serif italic placeholder:text-white/20 outline-none transition-all"
+            style={{ backgroundColor: "rgba(255, 255, 255, 0.04)" }}
+          />
+          {isSearching && (
+            <div className="absolute right-4 top-1/2 -translate-y-1/2">
+              <div className="w-4 h-4 border-2 border-white/10 border-t-glass-emerald rounded-full animate-spin" />
+            </div>
+          )}
+        </div>
 
-      <ActionButton variant="secondary" onClick={onBack} className="w-full">
-        Back to matches
-      </ActionButton>
+        {/* Results */}
+        <div className="flex-1 overflow-y-auto no-scrollbar space-y-3 pb-2">
+          {results.length > 0 ? (
+            results.map((match, index) => (
+              <button
+                key={match.speciesKey}
+                onClick={() => onSelect(match)}
+                className="w-full text-left p-5 rounded-2xl border transition-all"
+                style={{
+                  backgroundColor: "rgba(255, 255, 255, 0.02)",
+                  borderColor: "rgba(255, 255, 255, 0.06)",
+                  animationDelay: `${index * 40}ms`,
+                }}
+              >
+                <div className="flex items-start justify-between mb-3">
+                  <div>
+                    <h4 className="text-base font-serif italic text-white/90 leading-tight">
+                      {match.speciesName}
+                    </h4>
+                    <p className="text-[8px] text-white/20 tracking-widest font-bold uppercase mt-0.5">
+                      {match.speciesKey.replace(/_/g, " ")}
+                    </p>
+                  </div>
+                  <div className="px-2.5 py-1 rounded-full bg-glass-emerald/10 border border-glass-emerald/20 text-[7px] text-glass-emerald/70 font-bold uppercase tracking-widest shrink-0 ml-3">
+                    {match.confidence}% match
+                  </div>
+                </div>
+                <div className="flex gap-4 border-t border-white/5 pt-3 text-white/30 text-[10px]">
+                  <span>{match.careInfo.light}</span>
+                  <span>·</span>
+                  <span>{match.careInfo.water}</span>
+                </div>
+              </button>
+            ))
+          ) : query.length >= 2 && !isSearching ? (
+            <div className="text-center py-12">
+              <p className="text-[10px] text-white/20 uppercase tracking-[0.2em] font-bold">
+                No matches found
+              </p>
+            </div>
+          ) : query.length < 2 ? (
+            <div className="text-center py-12">
+              <p className="text-[9px] text-white/15 uppercase tracking-[0.2em] font-bold">
+                Type to search…
+              </p>
+            </div>
+          ) : null}
+        </div>
+      </div>
+
+      {/* --- PINNED ACTION BAR --- */}
+      <div className="shrink-0 px-6 pb-6 pt-3">
+        <button
+          onClick={onBack}
+          className="w-full py-3.5 bg-white/5 border border-white/10 rounded-2xl text-[10px] font-bold uppercase tracking-widest text-white/40"
+        >
+          Back
+        </button>
+      </div>
     </div>
   );
 }

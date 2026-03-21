@@ -2,16 +2,29 @@
 
 import { useState, useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { compressImage, revokePreviewUrl, uploadPlantPhoto } from "@/lib/utils";
-import { MOCK_USER_ID } from "@/lib/supabase";
+import { TopBar } from "../ui";
 import { StepIndicator } from "./StepIndicator";
 import { PhotoCaptureStep } from "./PhotoCaptureStep";
 import { SpeciesSelectStep, ManualSpeciesSearch } from "./SpeciesSelectStep";
 import { LightSetupStep } from "./LightSetupStep";
 import { NameConfirmStep } from "./NameConfirmStep";
-import type { PlantFlowState, SpeciesMatch, LightOption, LightAnalysisData } from "./types";
+import { compressImage, revokePreviewUrl, uploadPlantPhoto } from "@/lib/utils";
+import { MOCK_USER_ID } from "@/lib/supabase";
+import type {
+  PlantFlowState,
+  SpeciesMatch,
+  LightOption,
+  LightAnalysisData,
+} from "./types";
 import type { PlantIdentificationResult, LightAnalysisResult } from "@/lib/ai";
 import { compressImage as compressLightImage } from "@/lib/utils";
+
+function mapLightLevelToOption(lightLevel: string): LightOption {
+  if (lightLevel.includes("direct")) return "bright_direct";
+  if (lightLevel.includes("bright")) return "bright_indirect";
+  if (lightLevel.includes("medium")) return "medium";
+  return "low";
+}
 
 const initialState: PlantFlowState = {
   step: 1,
@@ -37,24 +50,17 @@ export function AddPlantFlow() {
   const [showManualSearch, setShowManualSearch] = useState(false);
   const [isAnalyzingLight, setIsAnalyzingLight] = useState(false);
 
-  // Cleanup preview URL on unmount
   useEffect(() => {
     return () => {
-      if (state.photoPreviewUrl) {
-        revokePreviewUrl(state.photoPreviewUrl);
-      }
+      if (state.photoPreviewUrl) revokePreviewUrl(state.photoPreviewUrl);
     };
   }, [state.photoPreviewUrl]);
 
   const handlePhotoSelect = useCallback(async (file: File) => {
-    console.log("Photo selected:", { name: file.name, type: file.type, size: file.size });
     setState((prev) => ({ ...prev, isLoading: true, error: null }));
-
     try {
       const compressed = await compressImage(file);
-      console.log("Compression successful:", { width: compressed.width, height: compressed.height, blobSize: compressed.blob.size });
       const previewUrl = URL.createObjectURL(compressed.blob);
-
       setState((prev) => ({
         ...prev,
         photoBase64: compressed.base64,
@@ -63,20 +69,16 @@ export function AddPlantFlow() {
         isLoading: false,
       }));
     } catch (error) {
-      console.error("Error compressing image:", error);
-      const errorMessage = error instanceof Error ? error.message : "Unknown error";
       setState((prev) => ({
         ...prev,
         isLoading: false,
-        error: `Failed to process image: ${errorMessage}`,
+        error: "Failed to process image.",
       }));
     }
   }, []);
 
   const handleRetakePhoto = useCallback(() => {
-    if (state.photoPreviewUrl) {
-      revokePreviewUrl(state.photoPreviewUrl);
-    }
+    if (state.photoPreviewUrl) revokePreviewUrl(state.photoPreviewUrl);
     setState((prev) => ({
       ...prev,
       photoBase64: null,
@@ -89,34 +91,23 @@ export function AddPlantFlow() {
 
   const handleIdentifyPlant = useCallback(async () => {
     if (!state.photoBase64) return;
-
+    setIdentificationResult(null);
     setState((prev) => ({ ...prev, isLoading: true, error: null }));
-
     try {
       const response = await fetch("/api/analyze/identify", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ imageBase64: state.photoBase64 }),
       });
-
-      if (!response.ok) {
-        throw new Error("Failed to identify plant");
-      }
-
+      if (!response.ok) throw new Error("Failed to identify plant");
       const result: PlantIdentificationResult = await response.json();
       setIdentificationResult(result);
-
-      setState((prev) => ({
-        ...prev,
-        step: 2,
-        isLoading: false,
-      }));
+      setState((prev) => ({ ...prev, isLoading: false, step: 2 }));
     } catch (error) {
-      console.error("Error identifying plant:", error);
       setState((prev) => ({
         ...prev,
         isLoading: false,
-        error: "Failed to identify plant. Please try again.",
+        error: "Identification failed.",
       }));
     }
   }, [state.photoBase64]);
@@ -130,48 +121,32 @@ export function AddPlantFlow() {
     setShowManualSearch(false);
   }, []);
 
-  const handleSelectLight = useCallback((light: LightOption) => {
-    setState((prev) => ({
-      ...prev,
-      lightSetup: light,
-    }));
+  const handleSelectLight = useCallback((light: string) => {
+    setState((prev) => ({ ...prev, lightSetup: light as LightOption }));
   }, []);
 
   const handleAnalyzeLight = useCallback(async (file: File) => {
     setIsAnalyzingLight(true);
     setState((prev) => ({ ...prev, error: null }));
-
     try {
-      // Compress the light photo
       const compressed = await compressLightImage(file);
-
-      // Send to light analysis API
       const response = await fetch("/api/analyze/light", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ imageBase64: compressed.base64 }),
       });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to analyze light");
-      }
-
+      if (!response.ok) throw new Error("Light analysis failed");
       const result: LightAnalysisResult = await response.json();
-
+      const lightSetup = mapLightLevelToOption(result.light_level);
       setState((prev) => ({
         ...prev,
         lightPhotoBase64: compressed.base64,
         lightPhotoBlob: compressed.blob,
         lightAnalysis: result as LightAnalysisData,
+        lightSetup,
       }));
     } catch (error) {
-      console.error("Error analyzing light:", error);
-      const errorMessage = error instanceof Error ? error.message : "Unknown error";
-      setState((prev) => ({
-        ...prev,
-        error: `Failed to analyze light: ${errorMessage}`,
-      }));
+      setState((prev) => ({ ...prev, error: "Light analysis failed." }));
     } finally {
       setIsAnalyzingLight(false);
     }
@@ -187,63 +162,54 @@ export function AddPlantFlow() {
     }));
   }, []);
 
-  const handleLightContinue = useCallback(() => {
-    setState((prev) => ({
-      ...prev,
-      step: 4,
-    }));
-  }, []);
+  const handleLightContinue = useCallback(
+    () => setState((prev) => ({ ...prev, step: 4 })),
+    [],
+  );
 
   const handleConfirmPlant = useCallback(async () => {
-    if (!state.photoBlob || !state.selectedSpecies || !state.lightSetup || !state.nickname.trim()) {
+    if (
+      !state.photoBlob ||
+      !state.selectedSpecies ||
+      !state.lightSetup ||
+      !state.nickname.trim()
+    )
       return;
-    }
-
     setState((prev) => ({ ...prev, isLoading: true, error: null }));
-
     try {
-      // Upload photo to Supabase Storage
       const photoUrl = await uploadPlantPhoto(state.photoBlob, MOCK_USER_ID);
-
-      // Upload light photo if available
       let lightPhotoUrl: string | null = null;
-      if (state.lightPhotoBlob) {
-        lightPhotoUrl = await uploadPlantPhoto(state.lightPhotoBlob, MOCK_USER_ID);
-      }
+      if (state.lightPhotoBlob)
+        lightPhotoUrl = await uploadPlantPhoto(
+          state.lightPhotoBlob,
+          MOCK_USER_ID,
+        );
 
-      // Create plant via API with photoBase64 for health analysis
       const response = await fetch("/api/plants", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           speciesKey: state.selectedSpecies.speciesKey,
           speciesName: state.selectedSpecies.speciesName,
+          careInfo: state.selectedSpecies.careInfo,
           nickname: state.nickname.trim(),
           lightSetup: state.lightSetup,
           photoUrl,
-          photoBase64: state.photoBase64, // For initial health analysis
+          photoBase64: state.photoBase64,
           lightPhotoUrl,
           lightAnalysis: state.lightAnalysis,
         }),
       });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to create plant");
-      }
-
-      // Navigate to home with success
+      if (!response.ok) throw new Error("Failed to create plant");
       router.push("/?added=true");
     } catch (error) {
-      console.error("Error creating plant:", error);
-      const errorMessage = error instanceof Error ? error.message : "Unknown error";
       setState((prev) => ({
         ...prev,
         isLoading: false,
-        error: errorMessage,
+        error: "Creation failed.",
       }));
     }
-  }, [state.photoBlob, state.selectedSpecies, state.lightSetup, state.nickname, state.lightPhotoBlob, state.lightAnalysis, state.photoBase64, router]);
+  }, [state, router]);
 
   const goBack = useCallback(() => {
     setState((prev) => ({
@@ -253,81 +219,99 @@ export function AddPlantFlow() {
     setShowManualSearch(false);
   }, []);
 
-  const goToStep = useCallback((step: 1 | 2 | 3 | 4) => {
-    setState((prev) => ({ ...prev, step }));
-  }, []);
+  const goToStep = useCallback(
+    (step: 1 | 2 | 3 | 4) => setState((prev) => ({ ...prev, step })),
+    [],
+  );
 
   return (
-    <div className="space-y-4">
-      <StepIndicator currentStep={state.step} />
+    /* h-screen + flex-col ensures the content occupies the exact viewport height */
+    <div className="relative z-10 flex flex-col items-center w-full h-screen overflow-hidden bg-transparent">
+      {/* 1. Header (Fixed Height) */}
+      <TopBar title="Add Plant" showBack={true} />
 
-      {state.error && (
-        <div className="p-3 bg-coral/10 border border-coral/20 rounded-xl text-coral text-sm">
-          {state.error}
-        </div>
-      )}
-
-      <div className="transition-opacity duration-200">
-        {state.step === 1 && (
-          <PhotoCaptureStep
-            photoPreviewUrl={state.photoPreviewUrl}
-            isLoading={state.isLoading}
-            onPhotoSelect={handlePhotoSelect}
-            onRetake={handleRetakePhoto}
-            onContinue={handleIdentifyPlant}
-          />
-        )}
-
-        {state.step === 2 && !showManualSearch && (
-          <SpeciesSelectStep
-            matches={identificationResult?.matches || []}
-            needsClarification={identificationResult?.needsClarification || false}
-            clarificationMessage={identificationResult?.clarificationMessage}
-            selectedSpecies={state.selectedSpecies}
-            isLoading={state.isLoading}
-            onSelectSpecies={handleSelectSpecies}
-            onManualSearch={() => setShowManualSearch(true)}
-            onContinue={() => goToStep(3)}
-            onBack={() => goToStep(1)}
-          />
-        )}
-
-        {state.step === 2 && showManualSearch && (
-          <ManualSpeciesSearch
-            onSelect={(species) => {
-              handleSelectSpecies(species);
-              goToStep(3);
-            }}
-            onBack={() => setShowManualSearch(false)}
-          />
-        )}
-
-        {state.step === 3 && (
-          <LightSetupStep
-            selectedLight={state.lightSetup}
-            lightAnalysis={state.lightAnalysis}
-            isAnalyzing={isAnalyzingLight}
-            onSelectLight={handleSelectLight}
-            onAnalyzeLight={handleAnalyzeLight}
-            onClearAnalysis={handleClearLightAnalysis}
-            onContinue={handleLightContinue}
-            onBack={goBack}
-          />
-        )}
-
-        {state.step === 4 && (
-          <NameConfirmStep
-            photoPreviewUrl={state.photoPreviewUrl}
-            selectedSpecies={state.selectedSpecies}
-            lightSetup={state.lightSetup}
-            nickname={state.nickname}
-            isLoading={state.isLoading}
-            onNicknameChange={(name) => setState((prev) => ({ ...prev, nickname: name }))}
-            onConfirm={handleConfirmPlant}
-            onBack={goBack}
-          />
-        )}
+      {/* 2. Stepper Area (Calculated Offset) */}
+      <div className="w-full max-w-lg mt-20 px-6">
+        <StepIndicator currentStep={state.step} />
       </div>
+
+      {/* 3. Main Content (The Elastic Area) */}
+      <main className="flex-1 w-full flex flex-col justify-start overflow-hidden min-h-0">
+        {state.error && (
+          <div className="mx-6 mb-2 p-3 bg-coral/10 border border-coral/20 rounded-xl text-coral text-[10px] font-bold uppercase tracking-widest text-center shrink-0">
+            {state.error}
+          </div>
+        )}
+
+        <div className="flex-1 flex flex-col w-full min-h-0">
+          {state.step === 1 && (
+            <PhotoCaptureStep
+              photoPreviewUrl={state.photoPreviewUrl}
+              isLoading={state.isLoading}
+              isIdentified={identificationResult !== null}
+              onPhotoSelect={handlePhotoSelect}
+              onRetake={handleRetakePhoto}
+              onIdentify={handleIdentifyPlant}
+              onContinue={() => goToStep(2)}
+              onManualSearch={() => { goToStep(2); setShowManualSearch(true); }}
+            />
+          )}
+
+          {state.step === 2 && !showManualSearch && (
+            <SpeciesSelectStep
+              matches={identificationResult?.matches || []}
+              needsClarification={
+                identificationResult?.needsClarification || false
+              }
+              clarificationMessage={identificationResult?.clarificationMessage}
+              selectedSpecies={state.selectedSpecies}
+              isLoading={state.isLoading}
+              onSelectSpecies={handleSelectSpecies}
+              onManualSearch={() => setShowManualSearch(true)}
+              onContinue={() => goToStep(3)}
+              onBack={() => goToStep(1)}
+            />
+          )}
+
+          {state.step === 2 && showManualSearch && (
+            <ManualSpeciesSearch
+              onSelect={(species) => {
+                handleSelectSpecies(species);
+                goToStep(3);
+              }}
+              onBack={() => setShowManualSearch(false)}
+            />
+          )}
+
+          {state.step === 3 && (
+            <LightSetupStep
+              selectedLight={state.lightSetup}
+              lightAnalysis={state.lightAnalysis}
+              isAnalyzing={isAnalyzingLight}
+              onSelectLight={handleSelectLight}
+              onAnalyzeLight={handleAnalyzeLight}
+              onClearAnalysis={handleClearLightAnalysis}
+              onContinue={handleLightContinue}
+              onBack={goBack}
+            />
+          )}
+
+          {state.step === 4 && (
+            <NameConfirmStep
+              photoPreviewUrl={state.photoPreviewUrl}
+              selectedSpecies={state.selectedSpecies}
+              lightSetup={state.lightSetup}
+              nickname={state.nickname}
+              isLoading={state.isLoading}
+              onNicknameChange={(name) =>
+                setState((prev) => ({ ...prev, nickname: name }))
+              }
+              onConfirm={handleConfirmPlant}
+              onBack={goBack}
+            />
+          )}
+        </div>
+      </main>
     </div>
   );
 }

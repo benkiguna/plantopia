@@ -40,6 +40,7 @@ export interface LightOptionConfig {
   label: string;
   description: string;
   icon: string;
+  color: string;
 }
 
 export const LIGHT_OPTIONS: LightOptionConfig[] = [
@@ -48,23 +49,27 @@ export const LIGHT_OPTIONS: LightOptionConfig[] = [
     label: "Bright Direct",
     description: "Direct sunlight for several hours",
     icon: "sun",
+    color: "#fbbf24",
   },
   {
     value: "bright_indirect",
     label: "Bright Indirect",
     description: "Near a window, no direct rays",
     icon: "sun-dim",
+    color: "#f59e0b",
   },
   {
     value: "medium",
     label: "Medium",
     description: "A few feet from a window",
     icon: "cloud-sun",
+    color: "#6ee7b7",
   },
   {
     value: "low",
     label: "Low Light",
     description: "Far from windows, shaded areas",
     icon: "cloud",
+    color: "#94a3b8",
   },
 ];

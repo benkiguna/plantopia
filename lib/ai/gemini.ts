@@ -349,3 +349,64 @@ Respond with ONLY the JSON, no markdown formatting or extra text.`;
     throw new Error("Failed to analyze light");
   }
 }
+
+export interface PlantSearchResult {
+  speciesKey: string;
+  speciesName: string;
+  confidence: number;
+  careInfo: {
+    water: string;
+    light: string;
+    humidity: string;
+  };
+}
+
+export async function searchPlants(query: string): Promise<PlantSearchResult[]> {
+  const prompt = `You are a houseplant encyclopedia. The user is searching for "${query}".
+
+Return up to 5 matching houseplant species as valid JSON array:
+[
+  {
+    "speciesKey": "snake_case_species_key",
+    "speciesName": "Common Name (Scientific Name)",
+    "confidence": 90,
+    "careInfo": {
+      "water": "Every 7-10 days",
+      "light": "Bright indirect light",
+      "humidity": "Medium"
+    }
+  }
+]
+
+Rules:
+- Match by common name, scientific name, or nickname (e.g. "snake" matches Snake Plant, "money" matches Money Tree or Money Plant)
+- Order by relevance to the query (most relevant first)
+- confidence reflects how well it matches the search query (not plant health)
+- speciesKey: lowercase_with_underscores
+- If no good matches exist, return an empty array []
+- Respond with ONLY the JSON array, no markdown or extra text`;
+
+  try {
+    const response = await genAI.models.generateContent({
+      model: "gemini-2.5-flash",
+      contents: [{ role: "user", parts: [{ text: prompt }] }],
+    });
+
+    let text: string;
+    if (typeof response.text === "string") {
+      text = response.text;
+    } else if (typeof response.text === "function") {
+      text = (response.text as () => string)();
+    } else if (response.candidates?.[0]?.content?.parts?.[0]?.text) {
+      text = response.candidates[0].content.parts[0].text;
+    } else {
+      throw new Error("Unexpected response structure from Gemini API");
+    }
+
+    const cleanJson = text.replace(/```json\n?|\n?```/g, "").trim();
+    return JSON.parse(cleanJson) as PlantSearchResult[];
+  } catch (error) {
+    console.error("Error searching plants:", error);
+    throw new Error("Failed to search plants");
+  }
+}

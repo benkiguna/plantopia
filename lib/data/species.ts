@@ -1,5 +1,5 @@
 import { createSimpleServerClient } from "@/lib/supabase/server";
-import type { Species } from "@/types/database";
+import type { Species, Database } from "@/types/database";
 
 export async function getAllSpecies(): Promise<Species[]> {
   const supabase = createSimpleServerClient();
@@ -53,4 +53,23 @@ export async function searchSpecies(query: string): Promise<Species[]> {
   }
 
   return (data ?? []) as Species[];
+}
+
+export async function createSpecies(
+  speciesData: Database["public"]["Tables"]["species"]["Insert"]
+): Promise<Species> {
+  const supabase = createSimpleServerClient();
+
+  const { data, error } = await supabase
+    .from("species")
+    .insert(speciesData)
+    .select()
+    .single();
+
+  if (error) {
+    console.error("Error creating species:", error);
+    throw new Error("Failed to create species");
+  }
+
+  return data as Species;
 }

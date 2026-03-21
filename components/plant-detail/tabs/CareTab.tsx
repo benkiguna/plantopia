@@ -1,7 +1,7 @@
 "use client";
 
 import { ReactNode } from "react";
-import { Card, CardContent, Badge } from "@/components/ui";
+import { Card, CardContent } from "@/components/ui";
 import { Drop, Flask, Wind, ArrowsClockwise, Plant, Scissors, Lightbulb, Note } from "@phosphor-icons/react";
 import type { PlantWithSpecies, CareLog } from "@/types/database";
 import type { CareSchedule } from "@/lib/data/care";
@@ -82,8 +82,87 @@ function CareLogEntry({ entry }: { entry: CareLog }) {
   );
 }
 
+interface ScheduleRowProps {
+  icon: ReactNode;
+  iconBg: string;
+  label: string;
+  frequencyLabel: string;
+  isDefault?: boolean;
+  nextLabel: string;
+  isOverdue: boolean;
+  lastLabel: string | null;
+}
+
+function ScheduleRow({
+  icon,
+  iconBg,
+  label,
+  frequencyLabel,
+  isDefault,
+  nextLabel,
+  isOverdue,
+  lastLabel,
+}: ScheduleRowProps) {
+  return (
+    <div className="flex items-center justify-between p-4 bg-white/5 border border-white/5 rounded-xl hover:bg-white/10 transition-colors">
+      <div className="flex items-center gap-3">
+        <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 text-xl ${iconBg}`}>
+          {icon}
+        </div>
+        <div>
+          <p className="text-sm font-medium text-white">{label}</p>
+          <p className="text-xs text-white/40 mt-0.5">
+            {frequencyLabel}
+            {isDefault && (
+              <span className="ml-1 text-white/25 italic">· species default</span>
+            )}
+          </p>
+        </div>
+      </div>
+      <div className="text-right">
+        <span
+          className={`inline-block px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest border ${
+            isOverdue
+              ? "bg-coral/10 border-coral/30 text-coral"
+              : "bg-neon-emerald/10 border-neon-emerald/20 text-neon-emerald"
+          }`}
+        >
+          {nextLabel}
+        </span>
+        {lastLabel && (
+          <p className="text-[10px] text-white/30 mt-1">Last: {lastLabel}</p>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export function CareTab({ plant, careLog, careSchedule }: CareTabProps) {
   const species = plant.species;
+
+  // Derive last mist/rotate dates from careLog
+  const lastMistEntry = careLog.find((e) => e.action === "mist");
+  const lastRotateEntry = careLog.find((e) => e.action === "rotate");
+
+  const lastMistLabel = lastMistEntry ? formatDate(lastMistEntry.created_at) : null;
+  const lastRotateLabel = lastRotateEntry ? formatDate(lastRotateEntry.created_at) : null;
+
+  // Compute next mist/rotate (every 3 / every 7 days respectively)
+  const now = new Date();
+  const mistNext = lastMistEntry
+    ? (() => {
+        const d = new Date(lastMistEntry.created_at);
+        d.setDate(d.getDate() + 3);
+        return d;
+      })()
+    : null;
+  const rotateNext = lastRotateEntry
+    ? (() => {
+        const d = new Date(lastRotateEntry.created_at);
+        d.setDate(d.getDate() + 7);
+        return d;
+      })()
+    : null;
 
   return (
     <div className="space-y-4">
@@ -95,58 +174,101 @@ export function CareTab({ plant, careLog, careSchedule }: CareTabProps) {
           </h3>
           <div className="space-y-3">
             {/* Water */}
+            <ScheduleRow
+              icon={<Drop weight="fill" />}
+              iconBg="bg-sky/20 border border-sky/30 text-sky"
+              label="Water"
+              frequencyLabel={`Every ${species?.water_days || 7} days`}
+              isDefault={true}
+              nextLabel={formatFutureDate(careSchedule.water.nextDate)}
+              isOverdue={careSchedule.water.isOverdue}
+              lastLabel={
+                careSchedule.water.lastDate
+                  ? formatDate(careSchedule.water.lastDate.toISOString())
+                  : null
+              }
+            />
+
+            {/* Fertilize */}
+            <ScheduleRow
+              icon={<Flask weight="fill" />}
+              iconBg="bg-amber/20 border border-amber/30 text-amber"
+              label="Fertilize"
+              frequencyLabel={`Every ${species?.fertilize_days || 30} days`}
+              isDefault={true}
+              nextLabel={formatFutureDate(careSchedule.fertilize.nextDate)}
+              isOverdue={careSchedule.fertilize.isOverdue}
+              lastLabel={
+                careSchedule.fertilize.lastDate
+                  ? formatDate(careSchedule.fertilize.lastDate.toISOString())
+                  : null
+              }
+            />
+
+            {/* Mist */}
             <div className="flex items-center justify-between p-4 bg-white/5 border border-white/5 rounded-xl hover:bg-white/10 transition-colors">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-sky/20 border border-sky/30 flex items-center justify-center flex-shrink-0 text-sky text-xl">
-                  <Drop weight="fill" />
+                <div className="w-10 h-10 rounded-xl bg-slate-400/10 border border-slate-400/20 flex items-center justify-center flex-shrink-0 text-xl text-slate-300">
+                  <Wind weight="fill" />
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-white">Water</p>
-                  <p className="text-xs text-white/60">
-                    Every {species?.water_days || 7} days
+                  <p className="text-sm font-medium text-white">Mist</p>
+                  <p className="text-xs text-white/40 mt-0.5">
+                    Every 3 days
+                    <span className="ml-1 text-white/25 italic">· recommended</span>
                   </p>
                 </div>
               </div>
               <div className="text-right">
-                <Badge
-                  variant={careSchedule.water.isOverdue ? "warning" : "green"}
-                >
-                  {formatFutureDate(careSchedule.water.nextDate)}
-                </Badge>
-                {careSchedule.water.lastDate && (
-                  <p className="text-[10px] text-white/40 mt-1">
-                    Last: {formatDate(careSchedule.water.lastDate.toISOString())}
-                  </p>
+                {mistNext ? (
+                  <span
+                    className={`inline-block px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest border ${
+                      mistNext < now
+                        ? "bg-coral/10 border-coral/30 text-coral"
+                        : "bg-neon-emerald/10 border-neon-emerald/20 text-neon-emerald"
+                    }`}
+                  >
+                    {formatFutureDate(mistNext)}
+                  </span>
+                ) : (
+                  <span className="text-[10px] text-white/25 italic">Never logged</span>
+                )}
+                {lastMistLabel && (
+                  <p className="text-[10px] text-white/30 mt-1">Last: {lastMistLabel}</p>
                 )}
               </div>
             </div>
 
-            {/* Fertilize */}
+            {/* Rotate */}
             <div className="flex items-center justify-between p-4 bg-white/5 border border-white/5 rounded-xl hover:bg-white/10 transition-colors">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-amber/20 border border-amber/30 flex items-center justify-center flex-shrink-0 text-amber text-xl">
-                  <Flask weight="fill" />
+                <div className="w-10 h-10 rounded-xl bg-neon-emerald/10 border border-neon-emerald/20 flex items-center justify-center flex-shrink-0 text-xl text-neon-emerald">
+                  <ArrowsClockwise weight="bold" />
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-white">Fertilize</p>
-                  <p className="text-xs text-white/60">
-                    Every {species?.fertilize_days || 30} days
+                  <p className="text-sm font-medium text-white">Rotate</p>
+                  <p className="text-xs text-white/40 mt-0.5">
+                    Every 7 days
+                    <span className="ml-1 text-white/25 italic">· for even growth</span>
                   </p>
                 </div>
               </div>
               <div className="text-right">
-                <Badge
-                  variant={
-                    careSchedule.fertilize.isOverdue ? "warning" : "green"
-                  }
-                >
-                  {formatFutureDate(careSchedule.fertilize.nextDate)}
-                </Badge>
-                {careSchedule.fertilize.lastDate && (
-                  <p className="text-[10px] text-white/40 mt-1">
-                    Last:{" "}
-                    {formatDate(careSchedule.fertilize.lastDate.toISOString())}
-                  </p>
+                {rotateNext ? (
+                  <span
+                    className={`inline-block px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest border ${
+                      rotateNext < now
+                        ? "bg-coral/10 border-coral/30 text-coral"
+                        : "bg-neon-emerald/10 border-neon-emerald/20 text-neon-emerald"
+                    }`}
+                  >
+                    {formatFutureDate(rotateNext)}
+                  </span>
+                ) : (
+                  <span className="text-[10px] text-white/25 italic">Never logged</span>
+                )}
+                {lastRotateLabel && (
+                  <p className="text-[10px] text-white/30 mt-1">Last: {lastRotateLabel}</p>
                 )}
               </div>
             </div>
@@ -199,11 +321,15 @@ export function CareTab({ plant, careLog, careSchedule }: CareTabProps) {
               {careLog.slice(0, 10).map((entry) => (
                 <CareLogEntry key={entry.id} entry={entry} />
               ))}
+              {careLog.length > 10 && (
+                <p className="text-center text-[10px] text-white/25 pt-3 font-mono uppercase tracking-widest">
+                  Showing 10 of {careLog.length} activities
+                </p>
+              )}
             </div>
           ) : (
             <p className="text-sm text-white/50 text-center py-6 bg-white/5 rounded-xl border border-white/5 border-dashed">
-              No care activities logged yet. Use the quick actions above to
-              start tracking.
+              No care activities logged yet. Use the quick actions above to start tracking.
             </p>
           )}
         </CardContent>

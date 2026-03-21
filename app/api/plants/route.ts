@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createPlant, getSpecies } from "@/lib/data";
+import { createPlant, getSpecies, createSpecies } from "@/lib/data";
 import { addHealthEntry } from "@/lib/data";
 import { analyzeHealth } from "@/lib/ai";
 import { MOCK_USER_ID } from "@/lib/supabase/client";
@@ -11,6 +11,7 @@ export async function POST(request: NextRequest) {
     const {
       speciesKey,
       speciesName,
+      careInfo,
       nickname,
       lightSetup,
       photoUrl,
@@ -32,8 +33,27 @@ export async function POST(request: NextRequest) {
       const species = await getSpecies(speciesKey);
       if (species) {
         validatedSpeciesKey = speciesKey;
+      } else if (careInfo) {
+        try {
+          // Parse water days from string like "Every 7-10 days"
+          const waterDaysMatch = careInfo.water?.match(/\d+/);
+          const waterDays = waterDaysMatch ? parseInt(waterDaysMatch[0], 10) : 7;
+          
+          console.log(`Creating new species: ${speciesKey}`);
+          const newSpecies = await createSpecies({
+            key: speciesKey,
+            name: speciesName || speciesKey.replace(/_/g, " "),
+            water_days: waterDays,
+            light: careInfo.light || "Medium",
+            humidity: careInfo.humidity || "Medium",
+            fertilize_days: 30, // sensible default
+          });
+          validatedSpeciesKey = newSpecies.key;
+        } catch (createErr) {
+          console.error(`Failed to create new species "${speciesKey}", setting to null`, createErr);
+        }
       } else {
-        console.log(`Species key "${speciesKey}" not found in database, setting to null`);
+        console.log(`Species key "${speciesKey}" not found in database and no careInfo provided, setting to null`);
       }
     }
 

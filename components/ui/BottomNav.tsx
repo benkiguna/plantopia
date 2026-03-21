@@ -3,36 +3,67 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-import { Plant, Calendar, Plus, Sparkle } from "@phosphor-icons/react";
-
 interface NavItem {
   href: string;
   label: string;
-  icon: React.ReactNode;
-  isAdd?: boolean;
+  icon: (active: boolean) => React.ReactNode;
+}
+
+function LeafIcon({ active }: { active: boolean }) {
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={active ? 1.5 : 1} strokeLinecap="round" strokeLinejoin="round">
+      <path d="M6 21c3-3 7-6 12-12C14 5 8 5 4 9s-1 9 2 12z" />
+      <path d="M6 21c0-4 2-8 6-12" />
+    </svg>
+  );
+}
+
+function TrowelIcon({ active }: { active: boolean }) {
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={active ? 1.5 : 1} strokeLinecap="round" strokeLinejoin="round">
+      <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" />
+    </svg>
+  );
+}
+
+function ClockIcon({ active }: { active: boolean }) {
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={active ? 1.5 : 1} strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="10" />
+      <polyline points="12 6 12 12 16 14" />
+    </svg>
+  );
+}
+
+function GearIcon({ active }: { active: boolean }) {
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={active ? 1.5 : 1} strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="3" />
+      <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" />
+    </svg>
+  );
 }
 
 const navItems: NavItem[] = [
   {
     href: "/",
-    label: "Garden",
-    icon: <Plant weight="bold" className="w-6 h-6" />,
-  },
-  {
-    href: "/schedule",
-    label: "Schedule",
-    icon: <Calendar weight="bold" className="w-6 h-6" />,
+    label: "Home",
+    icon: (active) => <LeafIcon active={active} />,
   },
   {
     href: "/add",
-    label: "Add",
-    isAdd: true,
-    icon: <Plus weight="bold" className="w-7 h-7 flex-shrink-0" />,
+    label: "Collection",
+    icon: (active) => <TrowelIcon active={active} />,
   },
   {
-    href: "/insights",
-    label: "Insights",
-    icon: <Sparkle weight="bold" className="w-6 h-6" />,
+    href: "/schedule",
+    label: "History",
+    icon: (active) => <ClockIcon active={active} />,
+  },
+  {
+    href: "/settings",
+    label: "Settings",
+    icon: (active) => <GearIcon active={active} />,
   },
 ];
 
@@ -40,41 +71,30 @@ export function BottomNav() {
   const pathname = usePathname();
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50">
-      <div className="bg-charcoal/80 backdrop-blur-xl border-t border-white/5">
-        <div className="max-w-md mx-auto flex items-center justify-around h-16 px-4">
-          {navItems.map((item) => {
-            const isActive = pathname === item.href;
+    <nav className="fixed bottom-5 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-40px)] max-w-sm">
+      <div className="glass-card px-2 py-3 flex items-center justify-around">
+        {navItems.map((item) => {
+          const isActive = pathname === item.href;
 
-            if (item.isAdd) {
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className="flex items-center justify-center w-14 h-14 -mt-4 bg-neon-emerald rounded-[20px] text-charcoal shadow-[0_0_20px_rgba(34,211,138,0.3)] transition-transform active:scale-95 hover:brightness-110"
-                  aria-label={item.label}
-                >
-                  {item.icon}
-                </Link>
-              );
-            }
-
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={`flex flex-col items-center gap-1 px-4 py-2 transition-colors ${
-                  isActive ? "text-neon-emerald" : "text-white/40 hover:text-white/80"
-                }`}
-              >
-                {item.icon}
-                <span className="text-[10px] font-mono tracking-widest uppercase">{item.label}</span>
-              </Link>
-            );
-          })}
-        </div>
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={`relative flex flex-col items-center gap-1 px-4 py-1.5 rounded-2xl transition-all ${
+                isActive
+                  ? "text-amber-glow"
+                  : "text-white/30 hover:text-white/60"
+              }`}
+            >
+              {/* Active glow background */}
+              {isActive && (
+                <div className="absolute inset-0 rounded-2xl bg-amber-glow/8 shadow-[0_0_12px_rgba(255,213,128,0.1)]" />
+              )}
+              <span className="relative z-10">{item.icon(isActive)}</span>
+            </Link>
+          );
+        })}
       </div>
-      <div className="h-safe-area-inset-bottom bg-charcoal/90 backdrop-blur-xl" />
     </nav>
   );
 }

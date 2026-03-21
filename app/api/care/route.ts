@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { addCareLog } from "@/lib/data";
 import type { CareLogInsert } from "@/types/database";
 
@@ -29,6 +30,8 @@ export async function POST(request: NextRequest) {
     };
 
     const careLog = await addCareLog(careLogData);
+
+    revalidatePath(`/plant/${plantId}`);
 
     return NextResponse.json({ careLog });
   } catch (error) {
