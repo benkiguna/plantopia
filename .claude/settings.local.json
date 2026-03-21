@@ -42,7 +42,8 @@
       "mcp__ide__getDiagnostics",
       "Bash(grep -l \"DropIcon\\\\|Drop\" node_modules/@phosphor-icons/react/dist/*.cjs)",
       "Bash(grep:*)",
-      "Bash(node:*)"
+      "Bash(node:*)",
+      "Bash(git commit:*)"
     ]
   },
   "enableAllProjectMcpServers": true,

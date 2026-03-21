@@ -309,7 +309,7 @@ interface HealthTabProps {
 
 // ─── Main Export ──────────────────────────────────────────────────────────────
 
-export function HealthTab({ plantId, healthTimeline, species: _species }: HealthTabProps) {
+export function HealthTab({ plantId, healthTimeline }: HealthTabProps) {
   const router = useRouter();
   const [isReanalyzing, setIsReanalyzing] = useState(false);
   const [reanalyzeError, setReanalyzeError] = useState<string | null>(null);

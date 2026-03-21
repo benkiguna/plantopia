@@ -15,7 +15,7 @@ export function SuccessToast() {
   useEffect(() => {
     if (isAddedParam && !hasProcessedRef.current) {
       hasProcessedRef.current = true;
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- Intentional: sync external state (URL param) to component state
+      
       setVisible(true);
 
       // Clear the query param

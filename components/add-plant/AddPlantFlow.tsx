@@ -68,7 +68,7 @@ export function AddPlantFlow() {
         photoPreviewUrl: previewUrl,
         isLoading: false,
       }));
-    } catch (error) {
+    } catch {
       setState((prev) => ({
         ...prev,
         isLoading: false,
@@ -103,7 +103,7 @@ export function AddPlantFlow() {
       const result: PlantIdentificationResult = await response.json();
       setIdentificationResult(result);
       setState((prev) => ({ ...prev, isLoading: false, step: 2 }));
-    } catch (error) {
+    } catch {
       setState((prev) => ({
         ...prev,
         isLoading: false,
@@ -145,7 +145,7 @@ export function AddPlantFlow() {
         lightAnalysis: result as LightAnalysisData,
         lightSetup,
       }));
-    } catch (error) {
+    } catch {
       setState((prev) => ({ ...prev, error: "Light analysis failed." }));
     } finally {
       setIsAnalyzingLight(false);
@@ -202,7 +202,7 @@ export function AddPlantFlow() {
       });
       if (!response.ok) throw new Error("Failed to create plant");
       router.push("/?added=true");
-    } catch (error) {
+    } catch {
       setState((prev) => ({
         ...prev,
         isLoading: false,
