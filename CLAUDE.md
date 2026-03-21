@@ -39,10 +39,16 @@ Mobile-first personal plant care PWA with photo-based AI health analytics. Users
 - Error boundaries on every page
 
 ## Important
-- NEVER store API keys client-side. Claude API calls go through `/app/api/analyze`
+- NEVER store API keys client-side. AI calls go through `/app/api/analyze`
 - All plant photos stored in Supabase Storage bucket `plant-photos`
 - Image uploads must compress to max 1MB before upload (client-side)
 - Health scores are 0-100 integers derived from AI analysis
 - Care schedules calculate from species defaults + user environment data
-- See `/docs/SYSTEM_DESIGN.md` for architecture details
-- See `/docs/BUILD_PLAN.md` for phased implementation plan
+- Auth is MOCK only — `MOCK_USER_ID` hardcoded, no real login flow yet
+- AI model is Gemini (not Claude) — see `lib/ai/gemini.ts`
+
+## Application Image
+**Read `APP_IMAGE.md` before starting any feature or bug fix.**
+It contains the live registry of routes, components, data models, API contracts,
+feature status, known issues, and architectural decisions.
+**Update `APP_IMAGE.md` after completing any significant change.**
