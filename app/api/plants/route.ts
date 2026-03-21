@@ -2,11 +2,17 @@ import { NextRequest, NextResponse } from "next/server";
 import { createPlant, getSpecies, createSpecies } from "@/lib/data";
 import { addHealthEntry } from "@/lib/data";
 import { analyzeHealth } from "@/lib/ai";
-import { MOCK_USER_ID } from "@/lib/supabase/client";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
 import type { PlantInsert, HealthEntryInsert, HealthConcern, Json } from "@/types/database";
 
 export async function POST(request: NextRequest) {
   try {
+    const supabase = await createSupabaseServerClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const body = await request.json();
     const {
       speciesKey,
@@ -59,7 +65,7 @@ export async function POST(request: NextRequest) {
 
     // Create the plant
     const plantData: PlantInsert = {
-      user_id: MOCK_USER_ID,
+      user_id: user.id,
       species_key: validatedSpeciesKey,
       nickname,
       light_setup: lightSetup || "bright_indirect",

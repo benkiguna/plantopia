@@ -9,7 +9,7 @@ import { SpeciesSelectStep, ManualSpeciesSearch } from "./SpeciesSelectStep";
 import { LightSetupStep } from "./LightSetupStep";
 import { NameConfirmStep } from "./NameConfirmStep";
 import { compressImage, revokePreviewUrl, uploadPlantPhoto } from "@/lib/utils";
-import { MOCK_USER_ID } from "@/lib/supabase";
+import { createBrowserClient } from "@/lib/supabase";
 import type {
   PlantFlowState,
   SpeciesMatch,
@@ -177,13 +177,14 @@ export function AddPlantFlow() {
       return;
     setState((prev) => ({ ...prev, isLoading: true, error: null }));
     try {
-      const photoUrl = await uploadPlantPhoto(state.photoBlob, MOCK_USER_ID);
+      const supabase = createBrowserClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Not authenticated");
+
+      const photoUrl = await uploadPlantPhoto(state.photoBlob, user.id);
       let lightPhotoUrl: string | null = null;
       if (state.lightPhotoBlob)
-        lightPhotoUrl = await uploadPlantPhoto(
-          state.lightPhotoBlob,
-          MOCK_USER_ID,
-        );
+        lightPhotoUrl = await uploadPlantPhoto(state.lightPhotoBlob, user.id);
 
       const response = await fetch("/api/plants", {
         method: "POST",

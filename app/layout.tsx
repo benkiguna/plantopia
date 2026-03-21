@@ -9,6 +9,7 @@ import {
 import { ServiceWorkerRegister } from "@/components/ServiceWorkerRegister";
 import { PushPromptView } from "@/components/notifications/PushPromptView";
 import { PageTransition } from "@/components/PageTransition";
+import { AuthProvider } from "@/components/AuthProvider";
 import "./globals.css";
 
 const fraunces = Fraunces({
@@ -99,7 +100,9 @@ export default function RootLayout({
         </div>
         {/* --- MAIN CONTENT CONTAINER --- */}
         <main className="relative z-10 min-h-screen">
-          <PageTransition>{children}</PageTransition>
+          <AuthProvider>
+            <PageTransition>{children}</PageTransition>
+          </AuthProvider>
         </main>
 
         <PushPromptView />

@@ -20,7 +20,7 @@
 | Animations | Framer Motion v12 |
 | Icons | Phosphor Icons (`@phosphor-icons/react`) |
 | Fonts | Fraunces (display/serif), Outfit (body), JetBrains Mono |
-| Auth | **MOCK ONLY** — hardcoded `MOCK_USER_ID` (`00000000-0000-0000-0000-000000000001`) |
+| Auth | Supabase Auth — email/password + Google OAuth |
 | PWA | Service worker registered, push not implemented |
 | Deployment | Vercel (inferred from Next.js) |
 
@@ -28,7 +28,7 @@
 - All API calls to AI go through `/app/api/` — never client-side
 - Images compressed to max 1MB client-side before upload
 - Health scores are integers 0–100
-- No real authentication; single mock user for all data
+- Real Supabase Auth with email/password and Google OAuth
 
 ---
 
@@ -36,20 +36,22 @@
 
 | Route | Type | Purpose | Auth Required |
 |-------|------|---------|---------------|
-| `/` | Client (RSC shell) | Garden home — plant list + stats | No (mock) |
-| `/add` | Client | Add plant wizard (4 steps) | No (mock) |
-| `/plant/[id]` | Server RSC | Plant detail — health, care, setup | No (mock) |
-| `/schedule` | Server RSC | Care schedule — overdue/today/week | No (mock) |
-| `/insights` | Static | Placeholder insights page | No |
-| `/api/plants` | API POST | Create new plant | No |
-| `/api/plants/[id]` | API GET | Fetch single plant | No |
-| `/api/care` | API POST | Log care action | No |
-| `/api/analyze/identify` | API POST | AI: identify plant from photo | No |
-| `/api/analyze/health` | API POST | AI: health analysis from photo | No |
-| `/api/analyze/light` | API POST | AI: light level from room photo | No |
-| `/api/analyze/search` | API POST | AI: search species by name | No |
-| `/api/species` | API GET/POST | Species lookup/creation | No |
-| `/api/image/convert` | API POST | Image format conversion utility | No |
+| `/` | Client (RSC shell) | Garden home — plant list + stats | Yes |
+| `/add` | Client | Add plant wizard (4 steps) | Yes |
+| `/plant/[id]` | Server RSC | Plant detail — health, care, setup | Yes |
+| `/schedule` | Server RSC | Care schedule — overdue/today/week | Yes |
+| `/insights` | Static | Placeholder insights page | Yes |
+| `/auth` | Client | Login / Sign-up (email + Google) | No |
+| `/auth/callback` | API GET | Supabase OAuth callback | No |
+| `/api/plants` | API POST | Create new plant | Yes |
+| `/api/plants/[id]` | API GET/PATCH/DELETE | Fetch / update / delete plant | Yes |
+| `/api/care` | API POST | Log care action | Yes |
+| `/api/analyze/identify` | API POST | AI: identify plant from photo | Yes |
+| `/api/analyze/health` | API POST | AI: health analysis from photo | Yes |
+| `/api/analyze/light` | API POST | AI: light level from room photo | Yes |
+| `/api/analyze/search` | API POST | AI: search species by name | Yes |
+| `/api/species` | API GET/POST | Species lookup/creation | Yes |
+| `/api/image/convert` | API POST | Image format conversion utility | Yes |
 
 ---
 
@@ -322,6 +324,10 @@ nextDate = baseDate + species.water_days (or fertilize_days)
 - Animated care tiles (water fill, flask tilt, vapor lines, sun rotate)
 - Skeleton loading states
 - Image compression (client-side, max 1MB)
+- Edit plant metadata (nickname + all 9 light presets) via inline SetupTab form
+- Delete plant with animated confirmation modal (removes health + care logs)
+- Persistent auth session with auto sign-out redirect via AuthProvider
+- Sign-out button in Garden home header
 
 ### Partial / Stub ⚠️
 | Feature | Status | What's missing |
@@ -336,9 +342,9 @@ nextDate = baseDate + species.water_days (or fertilize_days)
 ### Not Started ❌
 | Feature | Notes |
 |---------|-------|
-| Edit plant (nickname, light) | No UI at all |
-| Delete plant | No UI at all |
-| Real authentication | Single hardcoded MOCK_USER_ID |
+| Photo gallery / health timeline view | Browse all check-in photos |
+| Side-by-side photo comparison | Old vs. new health check |
+| Bulk care actions | "Water all overdue" etc. |
 | Photo gallery / health timeline view | Browse all check-in photos |
 | Side-by-side photo comparison | Old vs. new health check |
 | Bulk care actions | "Water all overdue" etc. |
@@ -353,7 +359,7 @@ nextDate = baseDate + species.water_days (or fertilize_days)
 
 | ID | Type | Description | Severity |
 |----|------|-------------|----------|
-| T-01 | Tech Debt | `MOCK_USER_ID` hardcoded everywhere — must be replaced with real auth before multi-user | High |
+| T-01 | ~~Resolved~~ | `MOCK_USER_ID` replaced with real Supabase Auth (PLANT-10) | — |
 | T-02 | Bug | `GardenPulseHeader` uses `useRef<SVGLinearGradientElement>` — shimmer may break on some browsers | Low |
 | T-03 | Tech Debt | Mist/rotate intervals hardcoded in `QuickCareActions` (3d/7d) — not species-aware | Medium |
 | T-04 | UX Gap | No error recovery UI on failed health check-in — user sees error, no retry button in overlay | Medium |
@@ -416,6 +422,10 @@ Using Framer Motion `layoutId` for shared element transitions between home and d
 | 2026-03-21 | `revalidatePath` added to `/api/care` | `router.refresh()` was serving stale cache after logging care actions |
 | 2026-03-21 | 47 species seeded; all user plants linked | Plants showed "Unknown Species" and fallback care intervals |
 | 2026-03-21 | Gemini used instead of Claude for AI | Lower cost for vision tasks at scale |
+| 2026-03-21 | Real Supabase Auth implemented (PLANT-10) | MOCK_USER_ID removed; email+Google OAuth via /auth; RLS enabled on all tables; middleware protects all routes |
+| 2026-03-21 | Edit plant (PLANT-8) — nickname + 9 light presets inline in SetupTab | All 9 light presets match AddPlantFlow; revalidatePath on save; Cancel discards changes |
+| 2026-03-21 | Delete plant (PLANT-9) — AnimatePresence modal replaces browser confirm() | Explicit child record deletion before plant row; revalidatePath('/') on success |
+| 2026-03-21 | AuthProvider (PLANT-11) — onAuthStateChange listener in layout | Redirects to /auth on SIGNED_OUT event; sign-out button in GardenView header; alerts threshold corrected to <50 |
 | 2026-03-21 | Shared element transition via `layoutId` | Native app feel for photo expansion on card → detail navigation |
 
 ---

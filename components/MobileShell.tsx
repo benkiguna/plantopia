@@ -1,7 +1,7 @@
 "use client";
 
 import { ReactNode } from "react";
-import { TopBar } from "@/components/ui";
+import { TopBar, BottomNav } from "@/components/ui";
 
 interface MobileShellProps {
   children: ReactNode;
@@ -28,7 +28,7 @@ export function MobileShell({
         </TopBar>
       )}
       <main className={`flex-1 ${transparentHeader ? "-mt-14" : ""}`}>{children}</main>
-      {/* BottomNav hidden */}
+      <BottomNav />
     </div>
   );
 }

@@ -10,7 +10,6 @@ import { QuickCareActions } from "@/components/plant-detail/QuickCareActions";
 import { PlantActionRow } from "@/components/plant-detail/PlantActionRow";
 import { PlantDetailTabs } from "@/components/plant-detail/PlantDetailTabs";
 import { PlantDetailHero } from "@/components/plant-detail/PlantDetailHero";
-import { createSimpleServerClient } from "@/lib/supabase/server";
 import type { PlantWithSpecies } from "@/types/database";
 
 interface PlantDetailPageProps {
@@ -22,9 +21,6 @@ export default async function PlantDetailPage({
   params,
 }: PlantDetailPageProps) {
   const { id } = await params;
-
-  const supabase = createSimpleServerClient();
-  await supabase.auth.getSession();
 
   // Fetch all plant data in parallel
   const [plant, healthTimeline, careLog] = await Promise.all([

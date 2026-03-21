@@ -1,13 +1,17 @@
-import { createClient } from "@supabase/supabase-js";
+import { createBrowserClient as createSSRBrowserClient } from "@supabase/ssr";
 import type { Database } from "@/types/database";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
-// Browser client (for client components)
+// Browser client (for client components) — singleton pattern
 export function createBrowserClient() {
-  return createClient<Database>(supabaseUrl, supabaseAnonKey);
+  return createSSRBrowserClient<Database>(supabaseUrl, supabaseAnonKey);
 }
 
-// Mock user ID for development (no auth)
-export const MOCK_USER_ID = "00000000-0000-0000-0000-000000000001";
+// Get the current authenticated user's ID from the browser session
+export async function getCurrentUserId(): Promise<string | null> {
+  const supabase = createBrowserClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  return user?.id ?? null;
+}

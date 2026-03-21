@@ -13,7 +13,7 @@ import type {
   Species,
   HealthEntry,
 } from "@/types/database";
-import { MOCK_USER_ID, createBrowserClient } from "@/lib/supabase";
+import { createBrowserClient } from "@/lib/supabase";
 
 export function GardenView() {
   const [plants, setPlants] = useState<PlantWithLatestHealth[]>([]);
@@ -24,6 +24,9 @@ export function GardenView() {
     try {
       const supabase = createBrowserClient();
 
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
       const { data: plantsData, error } = await supabase
         .from("plants")
         .select(
@@ -32,7 +35,7 @@ export function GardenView() {
           species (*)
         `,
         )
-        .eq("user_id", MOCK_USER_ID)
+        .eq("user_id", user.id)
         .order("created_at", { ascending: false });
 
       if (error) throw error;
@@ -94,7 +97,7 @@ export function GardenView() {
         )
       : 0;
   const alerts = plants.filter(
-    (p) => (p.latest_health_entry?.health_score ?? 75) < 60,
+    (p) => (p.latest_health_entry?.health_score ?? 75) < 50,
   ).length;
 
   if (isLoading) {

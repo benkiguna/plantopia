@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { createSimpleServerClient } from "@/lib/supabase/server";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getScheduleForUser } from "@/lib/data/schedule";
 import ScheduleViewClient from "./ScheduleViewClient";
 
@@ -9,17 +9,17 @@ export const metadata = {
 };
 
 export default async function SchedulePage() {
-  const supabase = createSimpleServerClient();
+  const supabase = await createSupabaseServerClient();
 
   const {
-    data: { session },
-  } = await supabase.auth.getSession();
+    data: { user },
+  } = await supabase.auth.getUser();
 
-  if (!session) {
-    redirect("/login");
+  if (!user) {
+    redirect("/auth");
   }
 
-  const initialSchedule = await getScheduleForUser(session.user.id);
+  const initialSchedule = await getScheduleForUser(user.id);
 
   return <ScheduleViewClient initialSchedule={initialSchedule} />;
 }

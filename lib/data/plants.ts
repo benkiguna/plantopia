@@ -1,3 +1,4 @@
+import { revalidatePath } from "next/cache";
 import { createSimpleServerClient } from "@/lib/supabase/server";
 import type {
   Plant,
@@ -116,6 +117,25 @@ export async function updatePlant(
 export async function deletePlant(plantId: string): Promise<void> {
   const supabase = createSimpleServerClient();
 
+  // Explicitly delete child records before the plant row
+  const { error: healthError } = await supabase
+    .from("health_entries")
+    .delete()
+    .eq("plant_id", plantId);
+  if (healthError) {
+    console.error("Error deleting health entries:", healthError);
+    throw new Error("Failed to delete plant health entries");
+  }
+
+  const { error: careError } = await supabase
+    .from("care_logs")
+    .delete()
+    .eq("plant_id", plantId);
+  if (careError) {
+    console.error("Error deleting care logs:", careError);
+    throw new Error("Failed to delete plant care logs");
+  }
+
   const { error } = await supabase
     .from("plants")
     .delete()
@@ -125,4 +145,6 @@ export async function deletePlant(plantId: string): Promise<void> {
     console.error("Error deleting plant:", error);
     throw new Error("Failed to delete plant");
   }
+
+  revalidatePath("/");
 }

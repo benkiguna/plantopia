@@ -8,8 +8,7 @@ import {
   getHealthEntry,
   addHealthEntry,
 } from "@/lib/data";
-import { createSimpleServerClient } from "@/lib/supabase/server";
-import { MOCK_USER_ID } from "@/lib/supabase/client";
+import { createSimpleServerClient, createSupabaseServerClient } from "@/lib/supabase/server";
 import type { HealthConcern } from "@/types/database";
 
 const BUCKET = "plant-photos";
@@ -32,6 +31,12 @@ async function uploadPhoto(base64: string, plantId: string, userId: string): Pro
 
 export async function POST(request: NextRequest) {
   try {
+    const authClient = await createSupabaseServerClient();
+    const { data: { user } } = await authClient.auth.getUser();
+    if (!user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const body = await request.json();
     const { plantId, imageBase64, healthEntryId } = body as {
       plantId?: string;
@@ -59,7 +64,7 @@ export async function POST(request: NextRequest) {
     if (imageBase64) {
       // NEW CHECK-IN — upload photo, create entry, then analyze
 
-      const photoUrl = await uploadPhoto(imageBase64, plantId, MOCK_USER_ID);
+      const photoUrl = await uploadPhoto(imageBase64, plantId, user.id);
 
       // Create a health entry with a placeholder score; we'll update after analysis
       const newEntry = await addHealthEntry({
