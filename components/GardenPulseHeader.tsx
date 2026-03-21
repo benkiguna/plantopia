@@ -68,14 +68,14 @@ export function GardenPulseHeader({
   avgHealth = 78,
   alerts = 2,
 }) {
-  const shimmerRef = useRef(null);
+  const shimmerRef = useRef<SVGLinearGradientElement>(null);
 
   // Shimmer animation
   useEffect(() => {
-    const grad = shimmerRef.current;
+    const grad: SVGLinearGradientElement = shimmerRef.current!;
     if (!grad) return;
-    let rafId;
-    let timeoutId;
+    let rafId: number;
+    let timeoutId: ReturnType<typeof setTimeout>;
     function sweep() {
       const from = -200,
         to = W + 120,
@@ -84,8 +84,8 @@ export function GardenPulseHeader({
       function tick() {
         const t = Math.min((performance.now() - t0) / dur, 1);
         const x = from + t * (to - from);
-        grad.setAttribute("x1", x);
-        grad.setAttribute("x2", x + 200);
+        grad.setAttribute("x1", String(x));
+        grad.setAttribute("x2", String(x + 200));
         if (t < 1) {
           rafId = requestAnimationFrame(tick);
         } else {
